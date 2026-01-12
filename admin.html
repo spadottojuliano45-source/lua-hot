@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - LUA</title>
+    <style>
+        /* SEU LAYOUT ORIGINAL MANTIDO */
+        body { font-family: Arial, sans-serif; background: #000; color: #fff; padding: 20px; }
+        .admin-card { background: #111; border: 1px solid #ff0000; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .btn-salvar { width: 100%; padding: 12px; background: #ff0000; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .lista-membros, .galeria-admin { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
+        .item-membro { background: #1a1a1a; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-aprovar { background: #00ff00; color: #000; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .btn-excluir { background: #ff0000; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <h2>PAINEL DA LUA - HOT</h2>
+    
+    <!-- MODIFICAR VALORES DA ASSINATURA -->
+    <div class="config-vendas">
+        <h3>Configuração Geral</h3>
+        <label>Valor da Assinatura (R$):</label>
+        <input type="text" id="input-valor" placeholder="Ex: 30,00">
+        <label>Chave PIX:</label>
+        <input type="text" id="input-chave" placeholder="Digite a chave PIX">
+        <label>Link da Foto de Valor (Cadastro):</label>
+        <input type="text" id="input-foto-valor" placeholder="Link da imagem da oferta">
+        <button class="btn-salvar" onclick="salvarConfiguracoes()">SALVAR CONFIGURAÇÃO</button>
+    </div>
+
+    <!-- GERENCIAR GALERIA DE FOTOS E VÍDEOS -->
+    <div class="galeria-admin">
+        <h3>Postar na Galeria (Fotos/Vídeos)</h3>
+        <label>Caminho/URL da Imagem:</label>
+        <input type="text" id="post-url" placeholder="Ex: fotos/imagem01.jpg ou link da internet">
+        <label>Preço deste Item (R$):</label>
+        <input type="text" id="post-preco" placeholder="Ex: 15,00">
+        <label>Onde postar?</label>
+        <select id="post-tipo">
+            <option value="foto">Galeria de Fotos</option>
+            <option value="video">Galeria de Vídeos</option>
+        </select>
+        <button class="btn-salvar" style="background: #e6b800; color: #000;" onclick="postarConteudo()">POSTAR NA GALERIA</button>
+    </div>
+
+    <!-- GERENCIAR MEMBROS -->
+    <div class="lista-membros">
+        <h3>Membros Pendentes (Aguardando PIX)</h3>
+        <div id="lista-pendentes"></div>
+        <h3>Membros Ativos (Liberados)</h3>
+        <div id="lista-ativos"></div>
+    </div>
+    
+    <br>
+    <a href="index.html" style="color: #aaa; text-decoration: none; font-size: 12px;">← Voltar ao Site</a>
+</div>
+
+<script>
+    // 1. SALVAR CONFIGURAÇÃO GERAL
+    function salvarConfiguracoes() {
+        localStorage.setItem('valorPixAtivo', document.getElementById('input-valor').value);
+        localStorage.setItem('chavePixAtiva', document.getElementById('input-chave').value);
+        localStorage.setItem('fotoValorAtiva', document.getElementById('input-foto-valor').value);
+        alert("Configurações atualizadas!");
+    }
+
+    // 2. POSTAR NA GALERIA (FOTOS/VÍDEOS)
+    function postarConteudo() {
+        const url = document.getElementById('post-url').value;
+        const preco = document.getElementById('post-preco').value;
+        const tipo = document.getElementById('post-tipo').value;
+
+        if(!url || !preco) return alert("Por favor, preencha o caminho da foto e o valor.");
+
+        let galeria = JSON.parse(localStorage.getItem('galeria_hot_2026') || "[]");
+        galeria.push({ url, preco, tipo, id: Date.now() });
+        
+        localStorage.setItem('galeria_hot_2026', JSON.stringify(galeria));
+        alert("Postado com sucesso na galeria!");
+        
+        document.getElementById('post-url').value = "";
+        document.getElementById('post-preco').value = "";
+    }
+
+    // 3. GERENCIAMENTO DE MEMBROS COM DATA
+    function carregarMembros() {
+        const pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
+        const ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
+        const divP = document.getElementById('lista-pendentes');
+        const divA = document.getElementById('lista-ativos');
+
+        divP.innerHTML = pendentes.length ? "" : "<p style='color:#666'>Nenhum cadastro novo.</p>";
+        divA.innerHTML = ativos.length ? "" : "<p style='color:#666'>Nenhum membro ativo.</p>";
+
+        pendentes.forEach((m, index) => {
+            // Exibe a data de cadastro capturada no login.html
+            divP.innerHTML += `
+                <div class="item-membro">
+                    <span>
+                        <strong>${m.usuario}</strong><br>
+                        <small style="color:#888;">Data: ${m.dataCadastro || '---'}</small>
+                    </span>
+                    <div>
+                        <button class="btn-aprovar" onclick="aprovarMembro(${index})">APROVAR</button>
+                        <button class="btn-excluir" onclick="excluirPendente(${index})">X</button>
+                    </div>
+                </div>`;
+        });
+
+        ativos.forEach((m, index) => {
+            divA.innerHTML += `
+                <div class="item-membro">
+                    <span>
+                        <strong>${m.usuario}</strong><br>
+                        <small style="color:#888;">Membro desde: ${m.dataCadastro || '---'}</small>
+                    </span>
+                    <button class="btn-excluir" onclick="removerAtivo(${index})">BLOQUEAR</button>
+                </div>`;
+        });
+    }
+
+    function aprovarMembro(index) {
+        let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
+        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
+        ativos.push(pendentes[index]);
+        pendentes.splice(index, 1);
+        localStorage.setItem('pendentes', JSON.stringify(pendentes));
+        localStorage.setItem('membrosAtivos', JSON.stringify(ativos));
+        carregarMembros();
+    }
+
+    function excluirPendente(index) {
+        let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
+        pendentes.splice(index, 1);
+        localStorage.setItem('pendentes', JSON.stringify(pendentes));
+        carregarMembros();
+    }
+
+    function removerAtivo(index) {
+        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
+        ativos.splice(index, 1);
+        localStorage.setItem('membrosAtivos', JSON.stringify(ativos));
+        carregarMembros();
+    }
+
+    window.onload = function() {
+        carregarMembros();
+        document.getElementById('input-valor').value = localStorage.getItem('valorPixAtivo') || "";
+        document.getElementById('input-chave').value = localStorage.getItem('chavePixAtiva') || "";
+        document.getElementById('input-foto-valor').value = localStorage.getItem('fotoValorAtiva') || "";
+    };
+</script>
+</body>
+</html>

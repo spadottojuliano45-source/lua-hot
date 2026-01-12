@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilith Crow/assine</title>
+    <link rel="stylesheet" href="index.css">
+
+    <script>
+    // Trava Invisível 2026 - Não altera o layout
+    (function() {
+        const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+        const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+        if (!isAdmin && !isMembro) {
+            window.location.href = "login.html";
+        }
+    })();
+</script>
+
+    <style>
+        /* Área de acesso restrito */
+        #sessao-acesso { display: none; border: 2px solid #fff; padding: 20px; margin: 20px auto; max-width: 500px; background-color: rgba(0,0,0,0.95); color: white; text-align: center; border-radius: 10px; }
+        .abas-auth { display: flex; margin-bottom: 15px; border-bottom: 1px solid #444; }
+        .aba { flex: 1; padding: 10px; cursor: pointer; background: #222; color: #888; border: none; }
+        .aba.ativa { background: #ff0000; color: white; font-weight: bold; }
+        .form-area { display: none; }
+        .form-area.ativa { display: block; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; display: block; margin-left: auto; margin-right: auto; }
+        .btn-principal { background-color: #28a745; color: white; border: none; padding: 15px; width: 90%; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 10px; }
+        .btn-cancelar { background-color: #dc3545; color: white; border: none; padding: 10px; width: 90%; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        .pix-box { background: #fff; color: #000; padding: 15px; margin: 15px auto; width: 85%; border-radius: 5px; text-align: left; font-size: 14px; }
+
+        /* --- CHAT EXCLUSIVO (ESCONDIDO ATÉ LOGAR) --- */
+        #chat-exclusivo { display: none; max-width: 600px; margin: 20px auto; background: #1a1a1a; border: 2px solid #ff0000; border-radius: 15px; overflow: hidden; }
+        .chat-header { background: #ff0000; padding: 10px; font-weight: bold; color: white; }
+        #chat-mensagens { height: 300px; overflow-y: auto; padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 10px; background: #000; }
+        .mensagem { display: flex; align-items: center; gap: 10px; animation: fadeIn 0.3s; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ff0000; background: #333; }
+        .msg-texto { background: #222; padding: 8px 12px; border-radius: 10px; font-size: 0.9em; }
+        .chat-input-area { padding: 10px; background: #111; display: flex; gap: 5px; }
+        .chat-input-area input { flex: 1; margin: 0; padding: 8px; }
+        .emoji-btn { background: none; border: none; font-size: 1.5em; cursor: pointer; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        #painel-admin { display: none; border: 2px dashed gold; padding: 15px; margin-top: 20px; color: gold; background: #111; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <nav> 
+        <ul>
+            <li><a href="index.html"> Sobre</a></li>
+            <li><a href="javascript:void(0)" onclick="mostrarAcesso()"> Fotos</a></li>
+            <li><a href="fotos.html"> Materias</a></li>
+            <li><a href="javascript:void(0)" onclick="mostrarAcesso()">Vídeos</a></li>
+            <li><a href="assine.html">Conteúdos para assinantes</a></li>
+            <li><a href="contato.html">Contato</a></li>
+        </ul>
+    </nav>
+
+    <header>
+        <img src="./fotos/imagens/lilithcrow.jpg" alt="Lilith Crow">
+    </header>
+
+    <main>
+        <!-- ÁREA DE ACESSO -->
+        <section id="sessao-acesso">
+            <div class="abas-auth">
+                <button id="btn-aba-cadastro" class="aba" onclick="alternarAba('cadastro')">CADASTRAR</button>
+                <button id="btn-aba-login" class="aba ativa" onclick="alternarAba('login')">JÁ TENHO LOGIN</button>
+            </div>
+            <div id="form-cadastro" class="form-area">
+                <h3>Criar Conta</h3>
+                <form action="#" method="POST" enctype="multipart/form-data">
+                    <input type="text" id="cadUser" placeholder="Nome de Usuário" required>
+                    <input type="email" placeholder="E-mail" required>
+                    <input type="password" placeholder="Senha" required>
+                    <div class="pix-box">
+                        <strong>ASSINATURA: R$ 19,99 / mês</strong><br>
+                        Chave PIX: <strong>30775958859</strong><br><br>
+                        <label>Anexe o comprovante do PIX:</label>
+                        <input type="file" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn-principal">SOLICITAR ACESSO</button>
+                </form>
+            </div>
+            <div id="form-login" class="form-area ativa">
+                <h3>Acesse seu Perfil</h3>
+                <form onsubmit="validarAcesso(event)">
+                    <input type="email" id="emailInput" placeholder="E-mail" required>
+                    <input type="password" id="senhaInput" placeholder="Senha" required>
+                    <button type="submit" class="btn-principal" style="background-color: #007bff;">ENTRAR NO SITE</button>
+                </form>
+            </div>
+            <button class="btn-cancelar" onclick="fecharAcesso()">FECHAR</button>
+            <div id="painel-admin">
+                <h3>PAINEL DO ADMINISTRADOR</h3>
+                <p>Bem-vindo, Juliano Spadotto!</p>
+            </div>
+        </section>
+
+        <!-- CHAT EXCLUSIVO (PROTEGIDO) -->
+        <section id="chat-exclusivo">
+            <div class="chat-header">🖤 Chat Exclusivo Lilith Crow</div>
+            <div id="chat-mensagens">
+                <div class="mensagem">
+                    <img class="avatar" src="./fotos/imagens/lilithcrow.jpg">
+                    <div class="msg-texto"><b>Lilith:</b> Bem-vindos ao meu chat privado! ✨</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <button class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+                <button class="emoji-btn" onclick="addEmoji('🖤')">🖤</button>
+                <input type="text" id="campo-msg" placeholder="Escreva uma mensagem...">
+                <button onclick="enviarMensagem()" class="btn-principal" style="width: auto; margin:0; padding: 5px 15px;">Enviar</button>
+            </div>
+        </section>
+
+        <div id="info-geral">
+            <h1>Conteúdo para assinantes!</h1>
+            <p>Acesse fotos, vídeos e o chat exclusivo após o login.</p>
+            <p>A PLATAFORMA É PARA PESSOAS 18+!</p>
+            <li><a href="privacy.com.br"><h2>Assinar via Privacy</h2></a></li>
+        </div>
+    </main>
+
+    <footer>
+        <img src="./fotos/imagens/corvo_ave.webp" onclick="atalhoAdmin()" style="cursor: pointer;">
+        <p class="warning">Conteúdo exclusivo para assinantes.</p>
+    </footer>
+
+    <script>
+        let usuarioLogado = "";
+
+        function mostrarAcesso() {
+            document.getElementById('sessao-acesso').style.display = 'block';
+            document.getElementById('sessao-acesso').scrollIntoView();
+        }
+
+        function fecharAcesso() { document.getElementById('sessao-acesso').style.display = 'none'; }
+
+        function alternarAba(tipo) {
+            const fCad = document.getElementById('form-cadastro');
+            const fLog = document.getElementById('form-login');
+            if(tipo === 'cadastro') {
+                fCad.classList.add('ativa'); fLog.classList.remove('ativa');
+            } else {
+                fLog.classList.add('ativa'); fCad.classList.remove('ativa');
+            }
+        }
+
+        function validarAcesso(e) {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const senha = document.getElementById('senhaInput').value;
+            
+            if (email === "spadottojuliano45@gmail.com" && senha === "136408ju") {
+                liberarConteudo("Juliano Admin");
+                document.getElementById('painel-admin').style.display = 'block';
+            } else {
+                liberarConteudo("Assinante");
+            }
+        }
+
+        function liberarConteudo(nome) {
+            usuarioLogado = nome;
+            alert("Acesso liberado! Chat e conteúdos desbloqueados.");
+            document.getElementById('sessao-acesso').style.display = 'none';
+            document.getElementById('info-geral').style.display = 'none';
+            document.getElementById('chat-exclusivo').style.display = 'block';
+        }
+
+        // Lógica do Chat
+        function enviarMensagem() {
+            const campo = document.getElementById('campo-msg');
+            const texto = campo.value;
+            if(texto.trim() === "") return;
+
+            const chat = document.getElementById('chat-mensagens');
+            const novaMsg = document.createElement('div');
+            novaMsg.className = 'mensagem';
+            // Avatar padrão ou do administrador
+            const avatarSrc = usuarioLogado.includes("Juliano") ? "./fotos/imagens/lilithcrow.jpg" : "via.placeholder.com";
+            
+            novaMsg.innerHTML = `<img class="avatar" src="${avatarSrc}"><div class="msg-texto"><b>${usuarioLogado}:</b> ${texto}</div>`;
+            chat.appendChild(novaMsg);
+            campo.value = "";
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function addEmoji(emoji) {
+            document.getElementById('campo-msg').value += emoji;
+        }
+
+        let contCliques = 0;
+        function atalhoAdmin() {
+            contCliques++;
+            if(contCliques === 5) { mostrarAcesso(); alternarAba('login'); contCliques = 0; }
+        }
+
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 67 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+        };
+    </script>            
+</body>
+</html>

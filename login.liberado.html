@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat VIP 2026 - Lilith Crow</title>
+    <style>
+        body { font-family: sans-serif; background-color: #0d0d0d; color: #eee; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .chat-container { display: flex; width: 100%; max-width: 900px; background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; }
+        .member-list { width: 250px; border-right: 1px solid #333; padding: 15px; background: #151515; overflow-y: auto; max-height: 650px; display: flex; flex-direction: column; }
+        .btn-sair-chat { background: #331111; color: #ff4444; border: 1px solid #552222; padding: 10px; text-align: center; text-decoration: none; font-weight: bold; font-size: 12px; border-radius: 4px; margin-bottom: 20px; cursor: pointer; }
+        .member-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #222; font-size: 14px; }
+        .member-item.active { color: yellow; border-left: 3px solid yellow; background: #222; }
+        .chat-area { flex-grow: 1; padding: 15px; display: flex; flex-direction: column; background: #111; }
+        .chat-box { flex-grow: 1; overflow-y: auto; border: 1px solid #222; border-radius: 4px; padding: 15px; margin-bottom: 10px; background-color: #000; height: 380px; }
+        .emoji-bar { padding: 8px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; margin-bottom: 5px; display: flex; gap: 10px; flex-wrap: wrap; max-height: 70px; overflow-y: auto; }
+        .emoji-item { cursor: pointer; font-size: 20px; }
+        .message-input-area { display: flex; gap: 10px; align-items: center; }
+        .message-input { flex-grow: 1; padding: 12px; border: 1px solid #333; border-radius: 4px; background-color: #222; color: #eee; outline: none; }
+        .send-button { padding: 10px 20px; background-color: yellow; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .message { margin-bottom: 15px; border-bottom: 1px solid #111; padding-bottom: 10px; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; vertical-align: middle; border: 1px solid yellow; }
+        .current-chat-label { font-weight: bold; margin-bottom: 10px; color: yellow; font-size: 0.9em; text-transform: uppercase; }
+        .admin-controls { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .admin-button { padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; border: none; font-weight: bold; }
+        .msg-media { max-width: 250px; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid #333; }
+
+        /* OVERLAY DA VIDEOCHAMADA - POR CIMA DO CHAT */
+        #video-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; }
+        .video-btns { position: absolute; bottom: 30px; display: flex; gap: 20px; }
+        .btn-end-call { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; background: #ff4444; color: white; font-size: 22px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="chat-container">
+        <!-- Overlay de Videochamada -->
+        <div id="video-overlay">
+            <video id="webcam" autoplay playsinline></video>
+            <div class="video-btns">
+                <button class="btn-end-call" onclick="pararChamada()">📞</button>
+            </div>
+        </div>
+
+        <div class="member-list" id="member-list">
+            <a href="javascript:void(0)" class="btn-sair-chat" onclick="logout()">VOLTAR AO SITE</a>
+            <div class="member-item active" id="item-general" onclick="openChat('general', 'Chat Geral')">🌐 Chat Geral</div>
+        </div>
+
+        <div class="chat-area">
+            <div class="current-chat-label" id="chat-title">Conversando com: Chat Geral</div>
+            <div id="chat-box" class="chat-box"></div>
+            
+            <div class="emoji-bar">
+                <span class="emoji-item" onclick="addEmoji('😊')">😊</span><span class="emoji-item" onclick="addEmoji('😈')">😈</span>
+                <span class="emoji-item" onclick="addEmoji('🔥')">🔥</span><span class="emoji-item" onclick="addEmoji('🔞')">🔞</span>
+                <span class="emoji-item" onclick="addEmoji('❤️')">❤️</span><span class="emoji-item" onclick="insertEmoji('🤫')">🤫</span>
+            </div>
+
+            <div class="message-input-area">
+                <input type="text" id="message-input" class="message-input" placeholder="Digite sua mensagem...">
+                <button onclick="sendMessage()" class="send-button">ENVIAR</button>
+            </div>
+
+            <div class="admin-controls">
+                <input type="file" id="file-up" accept="image/*,video/*" style="display: none;" onchange="sendMedia(event)">
+                <button class="admin-button" style="background:#333; color:white;" onclick="document.getElementById('file-up').click()">📁 Mídia</button>
+                <button id="mic-btn" class="admin-button" style="background:#005500; color:white;" onclick="toggleMic()">🎤 Áudio</button>
+                <!-- BOTÃO DE VÍDEO ADICIONADO AQUI CONFORME SOLICITADO -->
+                <button class="admin-button" style="background:#004488; color:white;" onclick="chamarVideo()">📹 Vídeo</button>
+                <button id="btn-clean" class="admin-button" style="background:#444; color:#ff4444; display:none;" onclick="clearHistory()">🗑️ Limpar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imgAvatar = "fotos/imagens/00011.jpg";
+        let activeId = 'general';
+        let recorder;
+        let chunks = [];
+
+        const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+        const usuarioNome = sessionStorage.getItem('userName') || "Membro VIP";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(isAdmin) document.getElementById('btn-clean').style.display = 'inline-block';
+            renderList();
+            openChat('general', 'Chat Geral');
+            document.getElementById('message-input').addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+        });
+
+        // NOTIFICAÇÃO DE PAGAMENTO ANTES DE CHAMAR
+        async function chamarVideo() {
+            const confirmacao = confirm("ATENÇÃO: A videochamada tem um custo adicional de R$ 50,00 a cada 30 minutos. Deseja continuar?");
+            if (!confirmacao) return;
+
+            const over = document.getElementById('video-overlay');
+            const vid = document.getElementById('webcam');
+            over.style.display = 'flex';
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                vid.srcObject = s;
+                // Em um sistema real 2026, aqui você iniciaria a cobrança de R$ 50,00 por 30min
+            } catch(e) { alert("Câmera não autorizada ou erro na conexão."); over.style.display = 'none'; }
+        }
+
+        function pararChamada() {
+            const vid = document.getElementById('webcam');
+            if(vid.srcObject) vid.srcObject.getTracks().forEach(t => t.stop());
+            document.getElementById('video-overlay').style.display = 'none';
+        }
+
+        // --- Funções de Chat Normais (Mantidas) ---
+        function renderList() {
+            const list = document.getElementById('member-list');
+            const sair = list.querySelector('.btn-sair-chat'); const geral = list.querySelector('#item-general');
+            list.innerHTML = ''; list.appendChild(sair); list.appendChild(geral);
+            if (isAdmin) { const mbs = JSON.parse(localStorage.getItem('chat_members')) || []; mbs.forEach(m => { const d = document.createElement('div'); d.className = 'member-item'; d.innerText = `👤 ${m}`; d.onclick = () => openChat(m, m); list.appendChild(d); }); } 
+            else { const d = document.createElement('div'); d.className = 'member-item active'; d.innerText = `👤 ${usuarioNome}`; d.onclick = () => openChat(usuarioNome, usuarioNome); list.appendChild(d); }
+        }
+        function openChat(id, name) { activeId = id; document.getElementById('chat-title').innerText = `Conversando com: ${name}`; const box = document.getElementById('chat-box'); box.innerHTML = localStorage.getItem(`chat_2026_${activeId}`) || `<p style="color:#444; text-align:center; font-size:11px;">[Segurança 2026]</p>`; box.scrollTop = box.scrollHeight; }
+        function sendMessage() { const input = document.getElementById('message-input'); if (!input.value.trim()) return; postMsg(input.value, 'text'); input.value = ''; }
+        function postMsg(content, type) {
+            const remetente = isAdmin ? 'Lua Hot' : usuarioNome; const color = isAdmin ? '#ff00ff' : 'yellow'; const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let body = `<span style="color:#fff;">${content}</span>`; if(type === 'img') body = `<img src="${content}" class="msg-media">`; if(type === 'vid') body = `<video controls class="msg-media"><source src="${content}"></video>`; if(type === 'aud') body = `<audio controls src="${content}"></audio>`;
+            const html = `<div class="message"><img src="${imgAvatar}" class="avatar"><span class="user" style="color:${color}">${remetente}:</span> <span class="time" style="font-size:10px;color:#444;">${time}</span><div style="margin-top:5px;">${body}</div></div>`;
+            const box = document.getElementById('chat-box'); box.innerHTML += html; box.scrollTop = box.scrollHeight;
+            if(!isAdmin) { let m = JSON.parse(localStorage.getItem('chat_members')) || []; if(!m.includes(usuarioNome)) { m.push(usuarioNome); localStorage.setItem('chat_members', JSON.stringify(m)); } }
+            localStorage.setItem(`chat_2026_${activeId}`, box.innerHTML);
+        }
+        function sendMedia(e) { const f = e.target.files; const reader = new FileReader(); reader.onload = (ev) => postMsg(ev.target.result, f.type.startsWith('video') ? 'vid' : 'img'); reader.readAsDataURL(f); }
+        async function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            if (!recorder || recorder.state === "inactive") {
+                const s = await navigator.mediaDevices.getUserMedia({ audio: true }); recorder = new MediaRecorder(s); chunks = []; recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = () => { const r = new FileReader(); r.onload = (ev) => postMsg(ev.target.result, 'aud'); r.readAsDataURL(new Blob(chunks)); btn.innerText = "🎤 Áudio"; btn.style.background = "#005500"; };
+                recorder.start(); btn.innerText = "🛑 Parar"; btn.style.background = "#aa0000";
+            } else { recorder.stop(); }
+        }
+        function addEmoji(e) { document.getElementById('message-input').value += e; }
+        function clearHistory() { if(confirm("Limpar?")) { localStorage.removeItem(`chat_2026_${activeId}`); openChat(activeId, activeId); } }
+        function logout() { window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilith Crow (Lua Hot) - Acesso Liberado</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        // Sistema de Verificação e Carregamento de Histórico 2026
+        document.addEventListener("DOMContentLoaded", function() {
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) chatContainer.style.display = "block";
+            
+            // Carrega mensagens gravadas anteriormente
+            carregarHistorico();
+
+            const btnLogin = document.getElementById('btn-login');
+            if(btnLogin) {
+                btnLogin.innerText = "SAIR";
+                btnLogin.style.color = "#ff0000";
+                btnLogin.href = "javascript:void(0)";
+                btnLogin.onclick = function() {
+                    sessionStorage.removeItem('logadoAdmin');
+                    sessionStorage.removeItem('logadoMembro');
+                    window.location.href = "index.html"; 
+                };
+            }
+        });
+    </script>
+</head>
+<body oncontextmenu="return false;">
+
+    <style>
+        img { -webkit-user-drag: none; user-select: none; pointer-events: auto; }
+        #chat-input { user-select: text !important; pointer-events: auto !important; }
+        /* Estilos do Chat VIP */
+        .msg-item { margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .avatar-chat { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 1px solid yellow; }
+        .emoji-bar { margin-bottom: 10px; background: #222; padding: 5px; border-radius: 5px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .emoji-btn { cursor: pointer; font-size: 20px; transition: 0.2s; }
+        .emoji-btn:hover { transform: scale(1.2); }
+        #btn-foto-lua { display: none; background: #444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    </style>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="materias.html">Materias</a></li>
+            <li><a href="fotos.html">Fotos</a></li>
+            <li><a href="videos.html">Videos</a></li>
+            <li><a href="#area-chat" style="color: yellow; font-weight: bold;">Chat ao Vivo</a></li>
+            <li><a href="login.html" id="btn-login" style="font-weight: bold; color: yellow;">LOGIN</a></li>
+        </ul>
+    </nav>
+
+    <header>
+        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal">
+    </header>
+
+   <main>
+    <h1>Bem-vinda de volta! Acesso TOTAL Liberado.</h1>
+    <br>
+    <p style="color: #00ff00; font-weight: bold;">Assinatura Ativa - Período 2026</p>
+
+    <!-- ÁREA DO CHAT VIP -->
+    <section id="area-chat" style="margin-top: 30px; border: 1px solid #444; padding: 20px; border-radius: 10px; background: #1a1a1a; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <h2 style="color: yellow; margin-bottom: 15px;">🗨️ Chat Privado - Lilith Crow</h2>
+        
+        <div id="chat-container" style="display: none;">
+            <!-- Barra de Emojis -->
+            <div class="emoji-bar">
+                <span class="emoji-btn" onclick="addEmoji('😊')">😊</span>
+                <span class="emoji-btn" onclick="addEmoji('🔥')">🔥</span>
+                <span class="emoji-btn" onclick="addEmoji('❤️')">❤️</span>
+                <span class="emoji-btn" onclick="addEmoji('😘')">😘</span>
+                <span class="emoji-btn" onclick="addEmoji('😈')">😈</span>
+                <span class="emoji-btn" onclick="addEmoji('🍑')">🍑</span>
+                <span class="emoji-btn" onclick="addEmoji('💦')">💦</span>
+                <span class="emoji-btn" onclick="addEmoji('⭐')">⭐</span>
+                <span class="emoji-btn" onclick="addEmoji('📸')">📸</span>
+            </div>
+
+            <div id="mensagens-box" style="height: 350px; overflow-y: auto; background: #000; padding: 15px; border: 1px solid #333; margin-bottom: 10px; text-align: left; color: #fff; border-radius: 5px;">
+                <!-- Mensagens carregam aqui -->
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="chat-input" placeholder="Escreva para Lua Hot..." style="flex-grow: 1; padding: 12px; border-radius: 5px; border: 1px solid #444; background: #222; color: white;">
+                    <button onclick="enviarMensagem()" style="background: yellow; color: black; font-weight: bold; border: none; padding: 10px 25px; cursor: pointer; border-radius: 5px;">ENVIAR</button>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <button id="btn-foto-lua" onclick="alert('Somente Lua Hot pode anexar arquivos.')">📁 Enviar Foto</button>
+                    <button onclick="window.location.href='index.html'" style="background: transparent; color: #666; border: none; cursor: pointer; text-decoration: underline;">Sair e Voltar à Home</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const imgLua = "fotos/imagens/00011.jpg";
+
+    function carregarHistorico() {
+        const box = document.getElementById('mensagens-box');
+        const salvo = localStorage.getItem('chat_historico_vip');
+        if (salvo) {
+            box.innerHTML = salvo;
+            box.scrollTop = box.scrollHeight;
+        } else {
+            box.innerHTML = `<p style="color: #555;">[Sistema]: Início da conversa segura em 2026.</p>`;
+        }
+        
+        // Libera botão de foto apenas para Admin
+        if (sessionStorage.getItem('logadoAdmin') === 'true') {
+            document.getElementById('btn-foto-lua').style.display = "block";
+        }
+    }
+
+    function addEmoji(emoji) {
+        document.getElementById('chat-input').value += emoji;
+        document.getElementById('chat-input').focus();
+    }
+
+    function enviarMensagem() {
+        const input = document.getElementById('chat-input');
+        const box = document.getElementById('mensagens-box');
+        let texto = input.value.trim();
+        
+        if (texto !== "") {
+            // Bloqueio de Números (CPF/Celular)
+            texto = texto.replace(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2})|(\d{2}\s?\d{4,5}-?\d{4})/g, "[CONTEÚDO PRIVADO]");
+
+            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+            const nome = isAdmin ? "Lua Hot" : "Membro VIP";
+            const cor = isAdmin ? "#ff00ff" : "yellow";
+            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            const htmlMsg = `
+                <div class="msg-item">
+                    <small style="color: #444;">${hora}</small><br>
+                    <img src="${imgLua}" class="avatar-chat" style="${isAdmin ? '' : 'filter: grayscale(1);'}">
+                    <span style="color: ${cor}; font-weight: bold;">${nome}:</span> ${texto}
+                </div>`;
+            
+            box.innerHTML += htmlMsg;
+            box.scrollTop = box.scrollHeight;
+            input.value = "";
+            
+            // Grava a conversa no navegador do usuário
+            localStorage.setItem('chat_historico_vip', box.innerHTML);
+        }
+    }
+
+    document.getElementById('chat-input').addEventListener("keypress", function(e) {
+        if (e.key === "Enter") enviarMensagem();
+    });
+</script>
+</body>
+</html>

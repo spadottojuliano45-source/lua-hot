@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilith Crow (Lua Hot)</title>
+    <link rel="stylesheet" href="style.css">
+
+<script>
+    // Sistema de Liberação Administrativa 2026
+    document.addEventListener("DOMContentLoaded", function() {
+        const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+        const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+
+        if (isAdmin || isMembro) {
+            console.log("Acesso Confirmado 2026: Liberando links...");
+
+            const links = document.querySelectorAll('nav ul li a');
+            links.forEach(link => {
+                link.classList.remove('travado'); 
+                link.style.opacity = "1";
+                link.style.cursor = "pointer";
+                
+                // Ajusta os destinos para a página que tem o conteúdo e o chat
+                if(link.innerText.includes("Fotos")) link.href = "login.liberado.html";
+                if(link.innerText.includes("Videos")) link.href = "login.liberado.html";
+                if(link.innerText.includes("Chat")) {
+                    link.href = "login.liberado.html";
+                    link.onclick = null; // Remove a função antiga que travava o link
+                }
+            });
+
+            const foto = document.getElementById('foto-principal');
+            if(foto) {
+                foto.style.pointerEvents = "auto";
+            }
+
+            const btnLogin = document.getElementById('btn-login');
+            if(btnLogin) {
+                btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR";
+                btnLogin.style.color = "#ff0000";
+                btnLogin.href = "javascript:void(0)";
+                btnLogin.onclick = function() {
+                    sessionStorage.removeItem('logadoAdmin');
+                    sessionStorage.removeItem('logadoMembro');
+                    location.reload(); 
+                };
+            }
+        }
+    });
+</script>
+</head>
+<body>
+
+    <style>
+        /* Mantendo seu layout original */
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: none; 
+        }
+        .travado {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="materias.html">Materias</a></li>
+            
+            <!-- Links ajustados para chamar a função de verificação -->
+            <li><a href="javascript:void(0)" class="travado" id="link-fotos" onclick="verificarAcesso('login.liberado.html')">Fotos</a></li>
+            <li><a href="javascript:void(0)" class="travado" id="link-videos" onclick="verificarAcesso('login.liberado.html')">Videos</a></li>
+            <li><a href="javascript:void(0)" class="travado" id="link-chat" onclick="verificarAcesso('login.liberado.html')">Chat ao Vivo</a></li>
+            
+            <li><a href="login.html" id="btn-login" style="font-weight: bold; color: yellow;">LOGIN</a></li>
+        </ul>
+    </nav>
+
+    <header>
+        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal">
+    </header>
+
+    <main>
+        <h1>Bem vindos ao site HOT de Lilith Crow(LUA).</h1>
+        <br>
+        <h2>ASSINEM AGORA E VEJA, OS CONTEÚDOS EXCLUSIVOS.</h2>
+        <h3>Fotos, Vídeos e Chat ao Vivo, só é permitido acesso com a assinatura mensal.</h3>
+        <h3>CLIQUE EM LOGIN NO MENU PRINCIPAL E SE CADASTRE E ACESSE OS CONTEÚDOS EXCLUSIVOS!</h3>
+    </main>
+
+    <script>
+        function verificarAcesso(url) {
+            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+            const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+
+            if (isAdmin || isMembro) {
+                window.location.href = url;
+            } else {
+                alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes.");
+                window.location.href = "login.html";
+            }
+        }
+    </script>
+</body>
+</html>

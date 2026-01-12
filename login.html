@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Lilith Crow</title>
+    <style>
+        /* LAYOUT ORIGINAL PRESERVADO - NÃO MEXER */
+        body { font-family: Arial, sans-serif; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #111; border: 1px solid #ff0000; width: 100%; max-width: 400px; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(255,0,0,0.4); position: relative; }
+        .btn-voltar-topo { position: absolute; top: 12px; left: 12px; color: #aaa; text-decoration: none; font-size: 11px; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; z-index: 10; background: #111; }
+        .tabs { display: flex; background: #222; padding-top: 40px; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .tab.active { border-bottom: 2px solid #ff0000; background: #111; }
+        .content { padding: 25px; display: none; }
+        .content.active { display: block; }
+        label { display: block; margin-bottom: 5px; font-size: 13px; color: #aaa; }
+        input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #333; background: #222; color: #fff; box-sizing: border-box; outline: none; }
+        .btn-acao { width: 100%; padding: 12px; border: none; border-radius: 5px; background: #ff0000; color: #fff; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
+        .btn-cancelar { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 5px; background: transparent; color: #aaa; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; box-sizing: border-box; font-size: 14px; }
+        .pix-box { margin-top: 15px; padding: 12px; border: 1px dashed #444; border-radius: 5px; font-size: 13px; background: #1a1a1a; line-height: 1.5; }
+        .status-msg { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; line-height: 1.4; }
+        
+        /* Estilo para a imagem de oferta dinâmica */
+        #img-oferta { width: 100%; margin-bottom: 15px; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="card">
+    <a href="index.html" class="btn-voltar-topo">← VOLTAR</a>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(event, 'tab-login')">LOGIN</div>
+        <div class="tab" onclick="switchTab(event, 'tab-cadastro')">CADASTRO</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login" class="content active">
+        <form id="form-login">
+            <label>Administrador ou Usuário:</label>
+            <input type="text" id="login-user" required>
+            <label>Senha:</label>
+            <input type="password" id="login-pass" required>
+            <button type="submit" class="btn-acao">ENTRAR</button>
+            <a href="index.html" class="btn-cancelar">CANCELAR</a>
+        </form>
+    </div>
+
+    <!-- CADASTRO -->
+    <div id="tab-cadastro" class="content">
+        <!-- Foto de oferta que você muda no Admin -->
+        <img src="" id="img-oferta" alt="Oferta Especial">
+
+        <form id="my-form" action="formspree.io" method="POST">
+            <label>Nome de Usuário:</label>
+            <input type="text" name="usuario" required>
+            <label>Email:</label>
+            <input type="email" name="email" required>
+            <label>Crie sua Senha:</label>
+            <input type="password" name="senha" required>
+
+            <div class="pix-box" id="pix-container">
+                <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
+                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
+                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
+                Mande o print para: <strong>(14) 99869-9358</strong>
+            </div>
+            <br>
+            <button id="my-form-button" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
+            <a href="index.html" class="btn-cancelar">CANCELAR</a>
+            <div id="my-form-status" class="status-msg"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // FUNÇÃO PARA ATUALIZAR VALORES DO ADMIN AUTOMATICAMENTE
+    function atualizarValoresDinamicos() {
+        const valorSalvo = localStorage.getItem('valorPixAtivo');
+        const chaveSalva = localStorage.getItem('chavePixAtiva');
+        const fotoSalva = localStorage.getItem('fotoValorAtiva');
+
+        if(valorSalvo) document.getElementById('txt-valor').innerText = "R$ " + valorSalvo;
+        if(chaveSalva) document.getElementById('txt-chave').innerText = chaveSalva;
+        
+        const imgOferta = document.getElementById('img-oferta');
+        if(fotoSalva && fotoSalva.trim() !== "") {
+            imgOferta.src = fotoSalva;
+            imgOferta.style.display = "block";
+        }
+    }
+
+    window.onload = atualizarValoresDinamicos;
+
+    function switchTab(event, tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // LOGIN
+    document.getElementById('form-login').onsubmit = function(e) {
+        e.preventDefault();
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+
+        if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
+            sessionStorage.setItem('logadoAdmin', 'true');
+            sessionStorage.setItem('nickName', 'LUA - HOT');
+            if (confirm("Olá Lua! Deseja entrar no Painel de Administração?")) {
+                window.location.href = "admin.html";
+            } else {
+                window.location.href = "login.liberado.html";
+            }
+            return;
+        }
+
+        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
+        let usuarioAprovado = ativos.find(m => (m.email === u || m.usuario === u) && m.senha === p);
+        
+        if(usuarioAprovado) {
+            sessionStorage.setItem('logadoMembro', 'true');
+            sessionStorage.setItem('nickName', usuarioAprovado.usuario);
+            window.location.href = "login.liberado.html";
+        } else {
+            alert("E-mail ou Senha incorretos ou aguardando aprovação!");
+        }
+    };
+
+    // CADASTRO COM CAPTURA DE DATA DE 2026
+    var form = document.getElementById("my-form");
+    form.onsubmit = async function(event) {
+      event.preventDefault();
+      var status = document.getElementById("my-form-status");
+      var button = document.getElementById("my-form-button");
+      var formData = new FormData(form);
+      
+      button.disabled = true;
+      button.innerText = "Enviando...";
+
+      // CAPTURA A DATA E HORA ATUAL
+      const agora = new Date().toLocaleString('pt-BR');
+
+      // Salva no sistema interno com a data
+      let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
+      pendentes.push({
+          usuario: formData.get('usuario'),
+          email: formData.get('email'),
+          senha: formData.get('senha'),
+          dataCadastro: agora // Adiciona a data no cadastro
+      });
+      localStorage.setItem('pendentes', JSON.stringify(pendentes));
+
+      fetch(event.target.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      }).then(response => {
+        if (response.ok) {
+          status.innerHTML = "<span style='color:#00ff00'>Obrigado por se cadastrar.<br>Aguardo a confirmação de pagamento!!</span>";
+          form.reset();
+          button.style.display = "none";
+        } else {
+          status.innerHTML = "<span style='color:red'>Erro ao enviar e-mail, mas seu cadastro foi salvo!</span>";
+          button.disabled = false;
+          button.innerText = "TENTAR NOVAMENTE";
+        }
+      }).catch(error => {
+        status.innerHTML = "<span style='color:red'>Erro de conexão.</span>";
+        button.disabled = false;
+        button.innerText = "TENTAR NOVAMENTE";
+      });
+    };
+</script>
+</body>
+</html>
