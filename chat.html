@@ -68,6 +68,11 @@
     <section id="area-chat" style="margin-top: 30px; border: 1px solid #444; padding: 20px; border-radius: 10px; background: #1a1a1a; max-width: 800px; margin-left: auto; margin-right: auto;">
         <h2 style="color: yellow; margin-bottom: 15px;">🗨️ Chat Privado - Lilith Crow</h2>
         
+        <!-- Lista de quem está online (Simulado) -->
+        <div id="status-online" style="font-size: 12px; color: #00ff00; margin-bottom: 10px; padding: 5px; background: #000; border-radius: 5px; border: 1px solid #333;">
+             ● <span id="lista-online">Carregando usuários...</span>
+        </div>
+
         <div id="chat-container" style="display: none;">
             <!-- Barra de Emojis -->
             <div class="emoji-bar">
@@ -113,10 +118,15 @@
             box.innerHTML = `<p style="color: #555;">[Sistema]: Início da conversa segura em 2026.</p>`;
         }
         
-        // Libera botão de foto apenas para Admin
-        if (sessionStorage.getItem('logadoAdmin') === 'true') {
+        // Verifica admin
+        const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+        if (isAdmin) {
             document.getElementById('btn-foto-lua').style.display = "block";
         }
+
+        // Atualiza Lista Online
+        const meuNome = isAdmin ? "Lua Hot" : (localStorage.getItem('nomeUsuario') || "Membro VIP");
+        document.getElementById('lista-online').innerText = `Online agora: Lua Hot, ${meuNome}`;
     }
 
     function addEmoji(emoji) {
@@ -130,11 +140,20 @@
         let texto = input.value.trim();
         
         if (texto !== "") {
-            // Bloqueio de Números (CPF/Celular)
             texto = texto.replace(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2})|(\d{2}\s?\d{4,5}-?\d{4})/g, "[CONTEÚDO PRIVADO]");
 
             const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
-            const nome = isAdmin ? "Lua Hot" : "Membro VIP";
+            
+            // LÓGICA DE IDENTIFICAÇÃO DO NOME
+            let nomeExibido;
+            if (isAdmin) {
+                nomeExibido = "Lua Hot";
+            } else {
+                // Pega o nome que o usuário salvou no cadastro
+                const nomeCadastrado = localStorage.getItem('nomeUsuario');
+                nomeExibido = nomeCadastrado ? nomeCadastrado : "Membro VIP";
+            }
+
             const cor = isAdmin ? "#ff00ff" : "yellow";
             const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
@@ -142,14 +161,13 @@
                 <div class="msg-item">
                     <small style="color: #444;">${hora}</small><br>
                     <img src="${imgLua}" class="avatar-chat" style="${isAdmin ? '' : 'filter: grayscale(1);'}">
-                    <span style="color: ${cor}; font-weight: bold;">${nome}:</span> ${texto}
+                    <span style="color: ${cor}; font-weight: bold;">${nomeExibido}:</span> ${texto}
                 </div>`;
             
             box.innerHTML += htmlMsg;
             box.scrollTop = box.scrollHeight;
             input.value = "";
             
-            // Grava a conversa no navegador do usuário
             localStorage.setItem('chat_historico_vip', box.innerHTML);
         }
     }

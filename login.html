@@ -20,8 +20,6 @@
         .btn-cancelar { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 5px; background: transparent; color: #aaa; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; box-sizing: border-box; font-size: 14px; }
         .pix-box { margin-top: 15px; padding: 12px; border: 1px dashed #444; border-radius: 5px; font-size: 13px; background: #1a1a1a; line-height: 1.5; }
         .status-msg { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; line-height: 1.4; }
-        
-        /* Estilo para a imagem de oferta dinâmica */
         #img-oferta { width: 100%; margin-bottom: 15px; border-radius: 5px; display: none; }
     </style>
 </head>
@@ -49,18 +47,16 @@
 
     <!-- CADASTRO -->
     <div id="tab-cadastro" class="content">
-        <!-- Foto de oferta que você muda no Admin -->
         <img src="" id="img-oferta" alt="Oferta Especial">
-
         <form id="my-form" action="formspree.io" method="POST">
             <label>Nome de Usuário:</label>
-            <input type="text" name="usuario" required>
+            <input type="text" name="usuario" id="reg-usuario" required>
             <label>Email:</label>
             <input type="email" name="email" required>
             <label>Crie sua Senha:</label>
             <input type="password" name="senha" required>
 
-            <div class="pix-box" id="pix-container">
+            <div class="pix-box">
                 <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
                 <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
                 Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
@@ -75,22 +71,16 @@
 </div>
 
 <script>
-    // FUNÇÃO PARA ATUALIZAR VALORES DO ADMIN AUTOMATICAMENTE
+    // Sincronização de Dados 2026
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
         const fotoSalva = localStorage.getItem('fotoValorAtiva');
-
         if(valorSalvo) document.getElementById('txt-valor').innerText = "R$ " + valorSalvo;
         if(chaveSalva) document.getElementById('txt-chave').innerText = chaveSalva;
-        
         const imgOferta = document.getElementById('img-oferta');
-        if(fotoSalva && fotoSalva.trim() !== "") {
-            imgOferta.src = fotoSalva;
-            imgOferta.style.display = "block";
-        }
+        if(fotoSalva && fotoSalva.trim() !== "") { imgOferta.src = fotoSalva; imgOferta.style.display = "block"; }
     }
-
     window.onload = atualizarValoresDinamicos;
 
     function switchTab(event, tabId) {
@@ -100,36 +90,34 @@
         document.getElementById(tabId).classList.add('active');
     }
 
-    // LOGIN
+    // LOGIN: Identifica o nome para todo o site
     document.getElementById('form-login').onsubmit = function(e) {
         e.preventDefault();
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
 
+        // Regra do Administrador
         if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
-            sessionStorage.setItem('nickName', 'LUA - HOT');
-            if (confirm("Olá Lua! Deseja entrar no Painel de Administração?")) {
-                window.location.href = "admin.html";
-            } else {
-                window.location.href = "login.liberado.html";
-            }
+            localStorage.setItem('nomeUsuario', 'Lua Hot'); // Nome fixo da Admin
+            window.location.href = confirm("Olá Lua! Ir para o Painel?") ? "admin.html" : "login.liberado.html";
             return;
         }
 
+        // Regra do Membro
         let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
-        let usuarioAprovado = ativos.find(m => (m.email === u || m.usuario === u) && m.senha === p);
+        let membro = ativos.find(m => (m.email === u || m.usuario === u) && m.senha === p);
         
-        if(usuarioAprovado) {
+        if(membro) {
             sessionStorage.setItem('logadoMembro', 'true');
-            sessionStorage.setItem('nickName', usuarioAprovado.usuario);
+            localStorage.setItem('nomeUsuario', membro.usuario); // Define o nome de navegação
             window.location.href = "login.liberado.html";
         } else {
-            alert("E-mail ou Senha incorretos ou aguardando aprovação!");
+            alert("Acesso negado ou aguardando aprovação!");
         }
     };
 
-    // CADASTRO COM CAPTURA DE DATA DE 2026
+    // CADASTRO: Registra o nome pretendido
     var form = document.getElementById("my-form");
     form.onsubmit = async function(event) {
       event.preventDefault();
@@ -140,16 +128,14 @@
       button.disabled = true;
       button.innerText = "Enviando...";
 
-      // CAPTURA A DATA E HORA ATUAL
-      const agora = new Date().toLocaleString('pt-BR');
+      const nomeUsuario = document.getElementById('reg-usuario').value;
 
-      // Salva no sistema interno com a data
       let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
       pendentes.push({
-          usuario: formData.get('usuario'),
+          usuario: nomeUsuario,
           email: formData.get('email'),
           senha: formData.get('senha'),
-          dataCadastro: agora // Adiciona a data no cadastro
+          dataCadastro: new Date().toLocaleString('pt-BR')
       });
       localStorage.setItem('pendentes', JSON.stringify(pendentes));
 
@@ -159,18 +145,14 @@
         headers: { 'Accept': 'application/json' }
       }).then(response => {
         if (response.ok) {
-          status.innerHTML = "<span style='color:#00ff00'>Obrigado por se cadastrar.<br>Aguardo a confirmação de pagamento!!</span>";
+          status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado!<br>O nome <b>"+nomeUsuario+"</b> será liberado após o pagamento.</span>";
           form.reset();
           button.style.display = "none";
         } else {
-          status.innerHTML = "<span style='color:red'>Erro ao enviar e-mail, mas seu cadastro foi salvo!</span>";
+          status.innerHTML = "<span style='color:red'>Erro no servidor.</span>";
           button.disabled = false;
-          button.innerText = "TENTAR NOVAMENTE";
+          button.innerText = "ENVIAR CADASTRO";
         }
-      }).catch(error => {
-        status.innerHTML = "<span style='color:red'>Erro de conexão.</span>";
-        button.disabled = false;
-        button.innerText = "TENTAR NOVAMENTE";
       });
     };
 </script>
