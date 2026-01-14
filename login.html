@@ -70,17 +70,13 @@
     </div>
 </div>
 
-<!-- Scripts Supabase -->
-<script src="cdn.jsdelivr.net"></script>
-<!-- Scripts Supabase -->
+<!-- Biblioteca Supabase 2026 -->
 <script src="cdn.jsdelivr.net"></script>
 <script>
-    // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Sincronização de valores do PIX (Preservado do seu original)
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -99,13 +95,12 @@
         document.getElementById(tabId).classList.add('active');
     }
 
-    // --- LÓGICA DE LOGIN (TABELA MEMBROS) ---
+    // --- LÓGICA DE LOGIN ---
     document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
 
-        // Regra Admin (Lua)
         if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Lua - Hot');
@@ -131,11 +126,10 @@
         }
     };
 
-    // --- LÓGICA DE CADASTRO (TABELA MEMBROS) ---
+    // --- LÓGICA DE CADASTRO ---
     const formCad = document.getElementById("my-form");
     formCad.onsubmit = async function(event) {
-        event.preventDefault(); // Mata o erro 405 do Formspree
-        
+        event.preventDefault(); 
         const status = document.getElementById("my-form-status");
         const button = document.getElementById("my-form-button");
         
@@ -149,7 +143,6 @@
             aprovado: false
         };
 
-        // Envia para o Supabase
         const { error } = await _supabase.from('membros').insert([novoUsuario]);
 
         if (error) {
