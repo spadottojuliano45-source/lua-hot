@@ -109,9 +109,9 @@
             return;
         }
 
-        // Busca no Supabase
+        // Busca no Supabase na tabela MEMBROS
         const { data, error } = await _supabase
-            .from('usuarios')
+            .from('membros')
             .select('*')
             .or(`email.eq."${u}",usuario.eq."${u}"`)
             .eq('senha', p)
@@ -144,7 +144,8 @@
             aprovado: false
         };
 
-        const { error } = await _supabase.from('usuarios').insert([novoUsuario]);
+        // Insere na tabela MEMBROS
+        const { error } = await _supabase.from('membros').insert([novoUsuario]);
 
         if (error) {
             status.innerHTML = "<span style='color:red'>Erro: Usuário ou e-mail já cadastrado.</span>";
