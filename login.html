@@ -36,8 +36,9 @@
     <!-- LOGIN -->
     <div id="tab-login" class="content active">
         <form id="form-login">
-            <label>Administrador ou Usuário:</label>
-            <input type="text" id="login-user" required>
+            <label>Email ou Usuário:</label>
+            <!-- O campo foi renomeado para login-email para clareza -->
+            <input type="text" id="login-email" required>
             <label>Senha:</label>
             <input type="password" id="login-pass" required>
             <button type="submit" class="btn-acao">ENTRAR</button>
@@ -48,7 +49,7 @@
     <!-- CADASTRO -->
     <div id="tab-cadastro" class="content">
         <img src="" id="img-oferta" alt="Oferta Especial">
-        <form id="my-form">
+        <form id="form-cadastro">
             <label>Nome de Usuário:</label>
             <input type="text" name="usuario" id="reg-usuario" required>
             <label>Email:</label>
@@ -63,9 +64,9 @@
                 Mande o print para: <strong>(14) 99869-9358</strong>
             </div>
             <br>
-            <button id="my-form-button" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
+            <button id="btn-cadastro-submit" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
             <a href="index.html" class="btn-cancelar">CANCELAR</a>
-            <div id="my-form-status" class="status-msg"></div>
+            <div id="status-cadastro" class="status-msg"></div>
         </form>
     </div>
 </div>
@@ -75,7 +76,8 @@
 <script>
     // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
+    // Mantenha sua chave 'anon' aqui. A chave service_role que você tinha é perigosa em código frontend.
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODMyMzU2NzUsImV4cCI6MTk5ODYxMTY3NX0.YOUR_ANON_KEY_HERE'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Sincronização de valores do PIX
@@ -97,66 +99,111 @@
         document.getElementById(tabId).classList.add('active');
     }
 
-    // --- LÓGICA DE LOGIN ---
+    // --- LÓGICA DE LOGIN (AGORA SEGURO COM SUPABASE AUTH) ---
     document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value.trim();
+        const emailInput = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
 
-        // Login da Admin
-        if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
+        // Login da Admin hardcoded (mantido como exceção do usuário)
+        if (emailInput === "spadottojuliano45@gmail.com" && pass === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Lua - Hot');
             window.location.href = "admin.html";
             return;
         }
 
-        const { data, error } = await _supabase
-            .from('membros')
-            .select('*')
-            .or(`email.eq."${u}",usuario.eq."${u}"`)
-            .eq('senha', p)
-            .single();
+        // Login do Membro via Supabase Auth
+        const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
+            email: emailInput, // O Auth usa o e-mail como login principal
+            password: pass,
+        });
 
-        if (error || !data) {
-            alert("Acesso negado ou dados incorretos!");
-        } else if (!data.aprovado) {
-            alert("Aguardando liberação de pagamento!");
-        } else {
-            sessionStorage.setItem('logadoMembro', 'true');
-            localStorage.setItem('nomeUsuario', data.usuario);
-            window.location.href = "login.liberado.html";
+        if (authError) {
+            alert("Acesso negado. Verifique seu e-mail e senha.");
+            return;
+        }
+
+        // Se o login Auth for bem-sucedido, verifique se o membro está 'aprovado' na sua tabela 'membros'
+        if (authData.user) {
+            const { data: membroData, error: membroError } = await _supabase
+                .from('membros')
+                .select('*')
+                .eq('id', authData.user.id) // Use o ID seguro do Auth para buscar o perfil
+                .single();
+
+            if (membroError || !membroData) {
+                alert("Erro ao encontrar seu perfil. Contate o suporte.");
+                await _supabase.auth.signOut(); // Desloga o usuário automaticamente
+                return;
+            }
+
+            if (!membroData.aprovado) {
+                alert("Sua conta está aguardando aprovação de pagamento!");
+                await _supabase.auth.signOut(); // Desloga o usuário automaticamente
+                return;
+            } else {
+                // Logado e aprovado com sucesso!
+                localStorage.setItem('supabaseToken', authData.session.access_token); // Armazena o token
+                localStorage.setItem('nomeUsuario', membroData.usuario);
+                window.location.href = "login.liberado.html";
+            }
         }
     };
 
-    // --- LÓGICA DE CADASTRO ---
-    const formCad = document.getElementById("my-form");
+    // --- LÓGICA DE CADASTRO (AGORA SEGURO COM SUPABASE AUTH) ---
+    const formCad = document.getElementById("form-cadastro");
     formCad.onsubmit = async function(event) {
         event.preventDefault(); 
-        const status = document.getElementById("my-form-status");
-        const button = document.getElementById("my-form-button");
+        const status = document.getElementById("status-cadastro");
+        const button = document.getElementById("btn-cadastro-submit");
         
         button.disabled = true;
         button.innerText = "Enviando...";
 
-        const novoUsuario = {
-            usuario: document.getElementById('reg-usuario').value.trim(),
-            email: document.getElementById('reg-email').value.trim(),
-            senha: document.getElementById('reg-pass').value.trim(),
-            aprovado: false
-        };
+        const email = document.getElementById('reg-email').value.trim();
+        const senha = document.getElementById('reg-pass').value.trim();
+        const usuario = document.getElementById('reg-usuario').value.trim();
 
-        const { error } = await _supabase.from('membros').insert([novoUsuario]);
+        // 1. Registrar no sistema de autenticação (supa-auth)
+        const { data: authData, error: authError } = await _supabase.auth.signUp({
+            email: email,
+            password: senha,
+        });
 
-        if (error) {
-            console.error("Erro Supabase:", error);
-            status.innerHTML = "<span style='color:red'>Erro no servidor. Tente outro e-mail.</span>";
+        if (authError) {
+            console.error("Erro Supabase Auth:", authError);
+            status.innerHTML = `<span style='color:red'>Erro no cadastro: ${authError.message}.</span>`;
             button.disabled = false;
             button.innerText = "ENVIAR CADASTRO";
-        } else {
+            return;
+        }
+
+        // 2. Se o Auth for OK, insira os dados públicos na tabela 'membros'
+        if (authData.user) {
+            const novoMembro = {
+                id: authData.user.id, // CRÍTICO: use o ID do Auth como ID do membro
+                usuario: usuario,
+                email: email,
+                aprovado: false
+                // Não armazene a senha aqui!
+            };
+
+            const { error: insertError } = await _supabase.from('membros').insert([novoMembro]);
+
+            if (insertError) {
+                console.error("Erro ao inserir membro:", insertError);
+                status.innerHTML = "<span style='color:red'>Erro ao finalizar cadastro. Tente novamente.</span>";
+                // Considere deletar o usuário Auth criado aqui em caso de falha no insert
+                button.disabled = false;
+                button.innerText = "ENVIAR CADASTRO";
+                return;
+            }
+
             status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado com sucesso!<br>Aguarde a liberação após o PIX.</span>";
-            formCad.reset();
-            button.style.display = "none";
+            // Limpa o formulário após sucesso
+            formCad.reset(); 
+            button.style.display = "none"; // Oculta o botão de cadastro após o sucesso
         }
     };
 </script>
