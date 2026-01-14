@@ -3,70 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - LUA</title>
+    <title>Painel Administrativo</title>
     <style>
-        /* SEU LAYOUT ORIGINAL MANTIDO */
-        body { font-family: Arial, sans-serif; background: #000; color: #fff; padding: 20px; }
-        .admin-card { background: #111; border: 1px solid #ff0000; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
-        .btn-salvar { width: 100%; padding: 12px; background: #ff0000; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .lista-membros, .galeria-admin { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
-        .item-membro { background: #1a1a1a; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-aprovar { background: #00ff00; color: #000; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .btn-excluir { background: #ff0000; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; padding: 20px; }
+        .admin-card { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 5px; box-sizing: border-box; }
+        .btn-salvar { width: 100%; padding: 12px; background: #5cb85c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .lista-itens, .config-geral { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .item { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .btn-acao { background: #d9534f; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-left: 5px; }
+        .btn-acao.aprovar { background: #5cb85c; }
     </style>
 </head>
 <body>
 
 <div class="admin-card">
-    <h2>PAINEL DA LUA - HOT</h2>
+    <h2>PAINEL ADMINISTRATIVO</h2>
     
-    <!-- MODIFICAR VALORES DA ASSINATURA -->
-    <div class="config-vendas">
+    <!-- CONFIGURAÇÃO GERAL -->
+    <div class="config-geral">
         <h3>Configuração Geral</h3>
-        <label>Valor da Assinatura (R$):</label>
-        <input type="text" id="input-valor" placeholder="Ex: 30,00">
-        <label>Chave PIX:</label>
-        <input type="text" id="input-chave" placeholder="Digite a chave PIX">
-        <label>Link da Foto de Valor (Cadastro):</label>
-        <input type="text" id="input-foto-valor" placeholder="Link da imagem da oferta">
-        <button class="btn-salvar" onclick="salvarConfiguracoes()">SALVAR CONFIGURAÇÃO</button>
+        <label>Nome do Site:</label>
+        <input type="text" id="input-nome-site" placeholder="Digite o nome do seu site">
+        <label>E-mail de Contato:</label>
+        <input type="email" id="input-email-contato" placeholder="Digite o e-mail de contato">
+        <button class="btn-salvar" onclick="salvarConfiguracoesGeral()">SALVAR CONFIGURAÇÃO GERAL</button>
     </div>
 
-    <!-- GERENCIAR GALERIA DE FOTOS E VÍDEOS -->
-    <div class="galeria-admin">
-        <h3>Postar na Galeria (Fotos/Vídeos)</h3>
-        <label>Caminho/URL da Imagem:</label>
-        <input type="text" id="post-url" placeholder="Ex: fotos/imagem01.jpg ou link da internet">
-        <label>Preço deste Item (R$):</label>
-        <input type="text" id="post-preco" placeholder="Ex: 15,00">
-        <label>Onde postar?</label>
-        <select id="post-tipo">
-            <option value="foto">Galeria de Fotos</option>
-            <option value="video">Galeria de Vídeos</option>
-        </select>
-        <button class="btn-salvar" style="background: #e6b800; color: #000;" onclick="postarConteudo()">POSTAR NA GALERIA</button>
-    </div>
-
-    <!-- GERENCIAR MEMBROS -->
-    <div class="lista-membros">
-        <h3>Membros Pendentes (Aguardando PIX)</h3>
-        <div id="lista-pendentes"></div>
-        <h3>Membros Ativos (Liberados)</h3>
-        <div id="lista-ativos"></div>
+    <!-- GERENCIAR ITENS (Exemplo: Usuários, Produtos) -->
+    <div class="lista-itens">
+        <h3>Gerenciar Itens</h3>
+        <div id="lista-de-itens">
+            <!-- Itens serão carregados aqui -->
+        </div>
+        <button class="btn-salvar" style="background: #0275d8;" onclick="carregarItens()">Carregar Itens</button>
     </div>
     
     <br>
-    <a href="index.html" style="color: #aaa; text-decoration: none; font-size: 12px;">← Voltar ao Site</a>
+    <a href="index.html" style="color: #888; text-decoration: none; font-size: 12px;">← Voltar ao Site</a>
 </div>
 
+<!-- SUPABASE CORE 2026 -->
+<script src="cdn.jsdelivr.net"></script>
+
 <script>
-    // 1. SALVAR CONFIGURAÇÃO GERAL
+    // CONFIGURAÇÃO SUPABASE 2026 - CHAVES INSERIDAS
+    const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // SEGURANÇA: Só a Lua entra aqui
+    if(sessionStorage.getItem('logadoAdmin') !== 'true') {
+        window.location.href = "login.html";
+    }
+
+    // 1. SALVAR CONFIGURAÇÃO GERAL (PIX e VALORES)
     function salvarConfiguracoes() {
         localStorage.setItem('valorPixAtivo', document.getElementById('input-valor').value);
         localStorage.setItem('chavePixAtiva', document.getElementById('input-chave').value);
         localStorage.setItem('fotoValorAtiva', document.getElementById('input-foto-valor').value);
-        alert("Configurações atualizadas!");
+        alert("Configurações de pagamento atualizadas no site!");
     }
 
     // 2. POSTAR NA GALERIA (FOTOS/VÍDEOS)
@@ -74,78 +70,81 @@
         const url = document.getElementById('post-url').value;
         const preco = document.getElementById('post-preco').value;
         const tipo = document.getElementById('post-tipo').value;
-
         if(!url || !preco) return alert("Por favor, preencha o caminho da foto e o valor.");
-
         let galeria = JSON.parse(localStorage.getItem('galeria_hot_2026') || "[]");
         galeria.push({ url, preco, tipo, id: Date.now() });
-        
         localStorage.setItem('galeria_hot_2026', JSON.stringify(galeria));
-        alert("Postado com sucesso na galeria!");
-        
+        alert("Postado com sucesso!");
         document.getElementById('post-url').value = "";
         document.getElementById('post-preco').value = "";
     }
 
-    // 3. GERENCIAMENTO DE MEMBROS COM DATA
-    function carregarMembros() {
-        const pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
-        const ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
+    // 3. GERENCIAMENTO DE MEMBROS (BUSCANDO DO SUPABASE)
+    async function carregarMembros() {
+        const { data: membros, error } = await _supabase
+            .from('membros')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) return console.error("Erro ao carregar:", error);
+
         const divP = document.getElementById('lista-pendentes');
         const divA = document.getElementById('lista-ativos');
 
-        divP.innerHTML = pendentes.length ? "" : "<p style='color:#666'>Nenhum cadastro novo.</p>";
-        divA.innerHTML = ativos.length ? "" : "<p style='color:#666'>Nenhum membro ativo.</p>";
+        divP.innerHTML = "";
+        divA.innerHTML = "";
 
-        pendentes.forEach((m, index) => {
-            // Exibe a data de cadastro capturada no login.html
+        const pendentes = membros.filter(m => m.aprovado === false);
+        const ativos = membros.filter(m => m.aprovado === true);
+
+        if(pendentes.length === 0) divP.innerHTML = "<p style='color:#666'>Nenhum cadastro novo.</p>";
+        if(ativos.length === 0) divA.innerHTML = "<p style='color:#666'>Nenhum membro ativo.</p>";
+
+        pendentes.forEach((m) => {
             divP.innerHTML += `
                 <div class="item-membro">
                     <span>
                         <strong>${m.usuario}</strong><br>
-                        <small style="color:#888;">Data: ${m.dataCadastro || '---'}</small>
+                        <small style="color:#888;">E-mail: ${m.email}</small>
                     </span>
                     <div>
-                        <button class="btn-aprovar" onclick="aprovarMembro(${index})">APROVAR</button>
-                        <button class="btn-excluir" onclick="excluirPendente(${index})">X</button>
+                        <button class="btn-aprovar" onclick="aprovarMembro(${m.id})">APROVAR</button>
+                        <button class="btn-excluir" onclick="excluirMembro(${m.id})">X</button>
                     </div>
                 </div>`;
         });
 
-        ativos.forEach((m, index) => {
+        ativos.forEach((m) => {
             divA.innerHTML += `
                 <div class="item-membro">
                     <span>
                         <strong>${m.usuario}</strong><br>
-                        <small style="color:#888;">Membro desde: ${m.dataCadastro || '---'}</small>
+                        <small style="color:#888;">VIP Ativo</small>
                     </span>
-                    <button class="btn-excluir" onclick="removerAtivo(${index})">BLOQUEAR</button>
+                    <button class="btn-excluir" onclick="bloquearMembro(${m.id})">BLOQUEAR</button>
                 </div>`;
         });
     }
 
-    function aprovarMembro(index) {
-        let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
-        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
-        ativos.push(pendentes[index]);
-        pendentes.splice(index, 1);
-        localStorage.setItem('pendentes', JSON.stringify(pendentes));
-        localStorage.setItem('membrosAtivos', JSON.stringify(ativos));
-        carregarMembros();
+    async function aprovarMembro(id) {
+        if(confirm("Liberar acesso para este membro?")) {
+            const { error } = await _supabase.from('membros').update({ aprovado: true }).eq('id', id);
+            if(!error) carregarMembros();
+        }
     }
 
-    function excluirPendente(index) {
-        let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
-        pendentes.splice(index, 1);
-        localStorage.setItem('pendentes', JSON.stringify(pendentes));
-        carregarMembros();
+    async function bloquearMembro(id) {
+        if(confirm("Bloquear acesso deste membro?")) {
+            const { error } = await _supabase.from('membros').update({ aprovado: false }).eq('id', id);
+            if(!error) carregarMembros();
+        }
     }
 
-    function removerAtivo(index) {
-        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
-        ativos.splice(index, 1);
-        localStorage.setItem('membrosAtivos', JSON.stringify(ativos));
-        carregarMembros();
+    async function excluirMembro(id) {
+        if(confirm("Remover definitivamente?")) {
+            const { error } = await _supabase.from('membros').delete().eq('id', id);
+            if(!error) carregarMembros();
+        }
     }
 
     window.onload = function() {
