@@ -7,7 +7,7 @@
     <title>Lilith Crow (Lua Hot)</title>
     <link rel="stylesheet" href="style.css">
 
-    <!-- SUPABASE CORE 2026 -->
+    <!-- SUPABASE CORE 2026 - LINK CORRIGIDO -->
     <script src="cdn.jsdelivr.net"></script>
 
     <script>
@@ -25,16 +25,17 @@
             let acessoLiberado = isAdmin;
 
             if (isMembro && nomeUsuario) {
+                // Buscando na tabela correta: membros
                 const { data, error } = await _supabase
                     .from('membros')
                     .select('aprovado')
                     .eq('usuario', nomeUsuario)
                     .single();
                 
-                if (!error && data.aprovado) {
+                if (!error && data && data.aprovado) {
                     acessoLiberado = true;
                 } else {
-                    // Se não estiver aprovado no banco, limpa a sessão
+                    // Se não estiver aprovado no banco, limpa a sessão para travar os links
                     sessionStorage.removeItem('logadoMembro');
                     acessoLiberado = false;
                 }
