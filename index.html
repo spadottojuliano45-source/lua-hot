@@ -11,9 +11,9 @@
     <script src="cdn.jsdelivr.net"></script>
 
     <script>
-        // Configurações do seu Supabase
+        // Configurações Reais 2026
         const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; // <--- COLE SUA CHAVE AQUI
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         document.addEventListener("DOMContentLoaded", async function() {
@@ -21,11 +21,10 @@
             const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
             const nomeUsuario = localStorage.getItem('nomeUsuario');
 
-            // Validação de segurança extra com o banco de dados
             let acessoLiberado = isAdmin;
 
+            // Se for membro, verifica no banco se ele está ATIVO (aprovado = true)
             if (isMembro && nomeUsuario) {
-                // Buscando na tabela correta: membros
                 const { data, error } = await _supabase
                     .from('membros')
                     .select('aprovado')
@@ -35,7 +34,7 @@
                 if (!error && data && data.aprovado) {
                     acessoLiberado = true;
                 } else {
-                    // Se não estiver aprovado no banco, limpa a sessão para travar os links
+                    // Segurança: se não estiver aprovado, desloga por precaução
                     sessionStorage.removeItem('logadoMembro');
                     acessoLiberado = false;
                 }
@@ -49,7 +48,7 @@
                         link.classList.remove('travado'); 
                         link.style.opacity = "1";
                         link.style.cursor = "pointer";
-                        link.href = "login.liberado.html";
+                        link.href = "login.liberado.html"; // Destrava o link para a página VIP
                         link.onclick = null;
                     }
                 });
@@ -59,7 +58,7 @@
 
                 const btnLogin = document.getElementById('btn-login');
                 if(btnLogin) {
-                    btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR";
+                    btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR (" + nomeUsuario + ")";
                     btnLogin.style.color = "#ff0000";
                     btnLogin.href = "javascript:void(0)";
                     btnLogin.onclick = function() {
