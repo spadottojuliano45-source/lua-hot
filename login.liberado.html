@@ -77,8 +77,8 @@
     <script src="cdn.jsdelivr.net"></script>
     <script>
         const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-        // Use a sua chave 'anon' pública aqui. A chave service_role não deve estar no frontend.
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODMyMzU2NzUsImV4cCI6MTk5ODYxMTY3NX0.YOUR_ANON_KEY_HERE'; 
+        // Sua chave publicável foi inserida aqui:
+        const SUPABASE_KEY = 'sb_publishable_NwWEjJuRPr1Fe-826bS_BQ_bp4NwhJ7'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const imgAvatar = "fotos/imagens/00011.jpg";
@@ -144,10 +144,11 @@
                 box.scrollTop = box.scrollHeight; // Rola para o final
             }
         }
-        
-        // ... (as funções displayMessage, sendMessage, addEmoji, sendMedia, toggleMic, chamarVideo, pararChamada, clearHistory, openChat não foram fornecidas na sua totalidade, mas a estrutura agora é segura) ...
-        // Você precisará colar o restante das suas funções JavaScript aqui abaixo.
-        // Se precisar de ajuda com elas, me diga.
+
+        // --- COLE AQUI O RESTANTE DAS SUAS FUNÇÕES JAVASCRIPT ---
+        // Funções: displayMessage, sendMessage, addEmoji, sendMedia, toggleMic, chamarVideo, pararChamada, clearHistory, openChat
+        // Como não foram fornecidas no chat, você precisará colá-las do seu arquivo original aqui.
+        // Apenas certifique-se de que onde você usa IDs (e.g., para excluir mensagens), eles sejam tratados como strings ('${m.id}') por causa do UUID.
 
     </script>
 </body>
