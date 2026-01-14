@@ -72,11 +72,15 @@
 
 <!-- Scripts Supabase -->
 <script src="cdn.jsdelivr.net"></script>
+<!-- Scripts Supabase -->
+<script src="cdn.jsdelivr.net"></script>
 <script>
+    // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; // <--- COLE SUA CHAVE AQUI
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // Sincronização de valores do PIX (Preservado do seu original)
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -95,21 +99,20 @@
         document.getElementById(tabId).classList.add('active');
     }
 
-    // --- LÓGICA DE LOGIN ---
+    // --- LÓGICA DE LOGIN (TABELA MEMBROS) ---
     document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
 
-        // Regra Admin
+        // Regra Admin (Lua)
         if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Lua - Hot');
-            window.location.href = confirm("Olá Lua! Ir para o Painel?") ? "admin.html" : "login.liberado.html";
+            window.location.href = "admin.html";
             return;
         }
 
-        // Busca no Supabase na tabela MEMBROS
         const { data, error } = await _supabase
             .from('membros')
             .select('*')
@@ -120,7 +123,7 @@
         if (error || !data) {
             alert("Acesso negado ou dados incorretos!");
         } else if (!data.aprovado) {
-            alert("Cadastro aguardando liberação de pagamento!");
+            alert("Aguardando liberação de pagamento!");
         } else {
             sessionStorage.setItem('logadoMembro', 'true');
             localStorage.setItem('nomeUsuario', data.usuario);
@@ -128,9 +131,11 @@
         }
     };
 
-    // --- LÓGICA DE CADASTRO ---
-    document.getElementById('my-form').onsubmit = async function(event) {
-        event.preventDefault();
+    // --- LÓGICA DE CADASTRO (TABELA MEMBROS) ---
+    const formCad = document.getElementById("my-form");
+    formCad.onsubmit = async function(event) {
+        event.preventDefault(); // Mata o erro 405 do Formspree
+        
         const status = document.getElementById("my-form-status");
         const button = document.getElementById("my-form-button");
         
@@ -138,22 +143,23 @@
         button.innerText = "Enviando...";
 
         const novoUsuario = {
-            usuario: document.getElementById('reg-usuario').value,
-            email: document.getElementById('reg-email').value,
-            senha: document.getElementById('reg-pass').value,
+            usuario: document.getElementById('reg-usuario').value.trim(),
+            email: document.getElementById('reg-email').value.trim(),
+            senha: document.getElementById('reg-pass').value.trim(),
             aprovado: false
         };
 
-        // Insere na tabela MEMBROS
+        // Envia para o Supabase
         const { error } = await _supabase.from('membros').insert([novoUsuario]);
 
         if (error) {
-            status.innerHTML = "<span style='color:red'>Erro: Usuário ou e-mail já cadastrado.</span>";
+            console.error(error);
+            status.innerHTML = "<span style='color:red'>Erro no cadastro. Tente outro e-mail.</span>";
             button.disabled = false;
             button.innerText = "ENVIAR CADASTRO";
         } else {
-            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado!<br>O nome <b>"+novoUsuario.usuario+"</b> será liberado após o pagamento.</span>";
-            document.getElementById('my-form').reset();
+            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado com sucesso!<br>Aguarde a liberação após o PIX.</span>";
+            formCad.reset();
             button.style.display = "none";
         }
     };
