@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo</title>
+    <title>Painel Administrativo 2026</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; padding: 20px; }
         .admin-card { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 5px; box-sizing: border-box; }
-        .btn-salvar { width: 100%; padding: 12px; background: #5cb85c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .lista-itens, .config-geral { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .item { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        .btn-acao { background: #d9534f; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-left: 5px; }
-        .btn-acao.aprovar { background: #5cb85c; }
+        h3 { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+        label { font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background: #fff; border: 1px solid #ccc; color: #333; border-radius: 5px; box-sizing: border-box; }
+        .btn-salvar { width: 100%; padding: 12px; background: #5cb85c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-salvar:hover { background: #4cae4c; }
+        .item-membro { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .btn-acao { color: #fff; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-aprovar { background: #5cb85c; margin-right: 5px; }
+        .btn-excluir { background: #d9534f; }
+        .voltar { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -20,73 +24,68 @@
 <div class="admin-card">
     <h2>PAINEL ADMINISTRATIVO</h2>
     
-    <!-- CONFIGURAÇÃO GERAL -->
+    <!-- CONFIGURAÇÃO DE PAGAMENTO (LocalStorage) -->
     <div class="config-geral">
-        <h3>Configuração Geral</h3>
-        <label>Nome do Site:</label>
-        <input type="text" id="input-nome-site" placeholder="Digite o nome do seu site">
-        <label>E-mail de Contato:</label>
-        <input type="email" id="input-email-contato" placeholder="Digite o e-mail de contato">
-        <button class="btn-salvar" onclick="salvarConfiguracoesGeral()">SALVAR CONFIGURAÇÃO GERAL</button>
+        <h3>Configurações de Pagamento</h3>
+        <label>Valor do PIX (R$):</label>
+        <input type="text" id="input-valor" placeholder="Ex: 50,00">
+        
+        <label>Chave PIX:</label>
+        <input type="text" id="input-chave" placeholder="E-mail, CPF ou Celular">
+        
+        <label>URL da Foto de Cobrança:</label>
+        <input type="text" id="input-foto-valor" placeholder="link-da-imagem.com">
+        
+        <button class="btn-salvar" onclick="salvarConfiguracoes()">ATUALIZAR DADOS DE PAGAMENTO</button>
     </div>
 
-    <!-- GERENCIAR ITENS (Exemplo: Usuários, Produtos) -->
+    <!-- GERENCIAMENTO DE MEMBROS (Supabase) -->
     <div class="lista-itens">
-        <h3>Gerenciar Itens</h3>
-        <div id="lista-de-itens">
-            <!-- Itens serão carregados aqui -->
-        </div>
-        <button class="btn-salvar" style="background: #0275d8;" onclick="carregarItens()">Carregar Itens</button>
+        <h3>Membros Pendentes</h3>
+        <div id="lista-pendentes">Carregando...</div>
+
+        <h3>Membros VIP Ativos</h3>
+        <div id="lista-ativos">Carregando...</div>
+        
+        <button class="btn-salvar" style="background: #0275d8;" onclick="carregarMembros()">ATUALIZAR LISTAS</button>
     </div>
     
-    <br>
-    <a href="index.html" style="color: #888; text-decoration: none; font-size: 12px;">← Voltar ao Site</a>
+    <a href="index.html" class="voltar">← Voltar ao Site</a>
 </div>
 
-<!-- SUPABASE CORE 2026 -->
+<!-- SUPABASE SDK -->
 <script src="cdn.jsdelivr.net"></script>
 
 <script>
-    // CONFIGURAÇÃO SUPABASE 2026 - CHAVES INSERIDAS
+    // CONFIGURAÇÃO SUPABASE
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Mantenha sua chave completa aqui
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // SEGURANÇA: Só a Lua entra aqui
+    // SEGURANÇA
     if(sessionStorage.getItem('logadoAdmin') !== 'true') {
         window.location.href = "login.html";
     }
 
-    // 1. SALVAR CONFIGURAÇÃO GERAL (PIX e VALORES)
+    // 1. SALVAR CONFIGURAÇÃO LOCAL (PIX)
     function salvarConfiguracoes() {
         localStorage.setItem('valorPixAtivo', document.getElementById('input-valor').value);
         localStorage.setItem('chavePixAtiva', document.getElementById('input-chave').value);
         localStorage.setItem('fotoValorAtiva', document.getElementById('input-foto-valor').value);
-        alert("Configurações de pagamento atualizadas no site!");
+        alert("Dados salvos com sucesso!");
     }
 
-    // 2. POSTAR NA GALERIA (FOTOS/VÍDEOS)
-    function postarConteudo() {
-        const url = document.getElementById('post-url').value;
-        const preco = document.getElementById('post-preco').value;
-        const tipo = document.getElementById('post-tipo').value;
-        if(!url || !preco) return alert("Por favor, preencha o caminho da foto e o valor.");
-        let galeria = JSON.parse(localStorage.getItem('galeria_hot_2026') || "[]");
-        galeria.push({ url, preco, tipo, id: Date.now() });
-        localStorage.setItem('galeria_hot_2026', JSON.stringify(galeria));
-        alert("Postado com sucesso!");
-        document.getElementById('post-url').value = "";
-        document.getElementById('post-preco').value = "";
-    }
-
-    // 3. GERENCIAMENTO DE MEMBROS (BUSCANDO DO SUPABASE)
+    // 2. CARREGAR MEMBROS DO SUPABASE
     async function carregarMembros() {
         const { data: membros, error } = await _supabase
             .from('membros')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (error) return console.error("Erro ao carregar:", error);
+        if (error) {
+            console.error("Erro ao carregar:", error);
+            return;
+        }
 
         const divP = document.getElementById('lista-pendentes');
         const divA = document.getElementById('lista-ativos');
@@ -97,19 +96,16 @@
         const pendentes = membros.filter(m => m.aprovado === false);
         const ativos = membros.filter(m => m.aprovado === true);
 
-        if(pendentes.length === 0) divP.innerHTML = "<p style='color:#666'>Nenhum cadastro novo.</p>";
-        if(ativos.length === 0) divA.innerHTML = "<p style='color:#666'>Nenhum membro ativo.</p>";
+        if(pendentes.length === 0) divP.innerHTML = "<p style='color:#999; font-size:13px;'>Nenhum cadastro aguardando.</p>";
+        if(ativos.length === 0) divA.innerHTML = "<p style='color:#999; font-size:13px;'>Nenhum membro VIP ativo.</p>";
 
         pendentes.forEach((m) => {
             divP.innerHTML += `
                 <div class="item-membro">
-                    <span>
-                        <strong>${m.usuario}</strong><br>
-                        <small style="color:#888;">E-mail: ${m.email}</small>
-                    </span>
+                    <span><strong>${m.usuario}</strong><br><small>${m.email}</small></span>
                     <div>
-                        <button class="btn-aprovar" onclick="aprovarMembro(${m.id})">APROVAR</button>
-                        <button class="btn-excluir" onclick="excluirMembro(${m.id})">X</button>
+                        <button class="btn-acao btn-aprovar" onclick="aprovarMembro(${m.id})">APROVAR</button>
+                        <button class="btn-acao btn-excluir" onclick="excluirMembro(${m.id})">X</button>
                     </div>
                 </div>`;
         });
@@ -117,36 +113,35 @@
         ativos.forEach((m) => {
             divA.innerHTML += `
                 <div class="item-membro">
-                    <span>
-                        <strong>${m.usuario}</strong><br>
-                        <small style="color:#888;">VIP Ativo</small>
-                    </span>
-                    <button class="btn-excluir" onclick="bloquearMembro(${m.id})">BLOQUEAR</button>
+                    <span><strong>${m.usuario}</strong><br><small>Acesso VIP</small></span>
+                    <button class="btn-acao btn-excluir" onclick="bloquearMembro(${m.id})">BLOQUEAR</button>
                 </div>`;
         });
     }
 
+    // AÇÕES DO BANCO DE DADOS
     async function aprovarMembro(id) {
-        if(confirm("Liberar acesso para este membro?")) {
+        if(confirm("Liberar acesso VIP para este usuário?")) {
             const { error } = await _supabase.from('membros').update({ aprovado: true }).eq('id', id);
             if(!error) carregarMembros();
         }
     }
 
     async function bloquearMembro(id) {
-        if(confirm("Bloquear acesso deste membro?")) {
+        if(confirm("Remover acesso VIP deste usuário?")) {
             const { error } = await _supabase.from('membros').update({ aprovado: false }).eq('id', id);
             if(!error) carregarMembros();
         }
     }
 
     async function excluirMembro(id) {
-        if(confirm("Remover definitivamente?")) {
+        if(confirm("Excluir cadastro permanentemente?")) {
             const { error } = await _supabase.from('membros').delete().eq('id', id);
             if(!error) carregarMembros();
         }
     }
 
+    // INICIALIZAÇÃO
     window.onload = function() {
         carregarMembros();
         document.getElementById('input-valor').value = localStorage.getItem('valorPixAtivo') || "";
@@ -154,5 +149,6 @@
         document.getElementById('input-foto-valor').value = localStorage.getItem('fotoValorAtiva') || "";
     };
 </script>
+
 </body>
 </html>
