@@ -37,7 +37,6 @@
     <div id="tab-login" class="content active">
         <form id="form-login">
             <label>Email ou Usuário:</label>
-            <!-- O campo foi renomeado para login-email para clareza -->
             <input type="text" id="login-email" required>
             <label>Senha:</label>
             <input type="password" id="login-pass" required>
@@ -76,8 +75,8 @@
 <script>
     // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    // Mantenha sua chave 'anon' aqui. A chave service_role que você tinha é perigosa em código frontend.
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODMyMzU2NzUsImV4cCI6MTk5ODYxMTY3NX0.YOUR_ANON_KEY_HERE'; 
+    // Sua chave publicável foi inserida aqui:
+    const SUPABASE_KEY = 'sb_publishable_NwWEjJuRPr1Fe-826bS_BQ_bp4NwhJ7'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Sincronização de valores do PIX
@@ -200,7 +199,7 @@
                 return;
             }
 
-            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado com sucesso!<br>Aguarde a liberação após o PIX.</span>";
+            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado com sucesso!<br>Aguarde a liberação após o pagamento.</span>";
             // Limpa o formulário após sucesso
             formCad.reset(); 
             button.style.display = "none"; // Oculta o botão de cadastro após o sucesso
