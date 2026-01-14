@@ -78,7 +78,7 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Sincronização de valores do PIX (Preservado do seu original)
+    // Sincronização de valores do PIX
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -103,6 +103,7 @@
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
 
+        // Login da Admin
         if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Lua - Hot');
@@ -145,7 +146,6 @@
             aprovado: false
         };
 
-        // Envia para o Supabase na tabela membros
         const { error } = await _supabase.from('membros').insert([novoUsuario]);
 
         if (error) {
