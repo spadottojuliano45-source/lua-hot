@@ -59,12 +59,31 @@
 <script>
     // CONFIGURAÇÃO SUPABASE
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Mantenha sua chave completa aqui
+    // Use a chave 'anon' pública aqui.
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODMyMzU2NzUsImV4cCI6MTk5ODYxMTY3NX0.YOUR_ANON_KEY_HERE'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // SEGURANÇA
-    if(sessionStorage.getItem('logadoAdmin') !== 'true') {
-        window.location.href = "login.html";
+    // --- SEGURANÇA (NOVA VERIFICAÇÃO ASYNC) ---
+    async function verificarAdminLogado() {
+        // Pega a sessão atual do Auth
+        const { data: { session }, error } = await _supabase.auth.getSession();
+
+        // Se não houver sessão ou houver erro, redireciona para o login
+        if (error || !session) {
+            window.location.href = "login.html";
+            return false;
+        }
+
+        // Verifica se o email do usuário logado corresponde ao email do admin hardcoded
+        if (session.user.email !== "spadottojuliano45@gmail.com") {
+            alert("Acesso restrito a administradores.");
+            await _supabase.auth.signOut(); // Desloga qualquer um que não seja o admin
+            window.location.href = "login.html";
+            return false;
+        }
+        
+        // Se passar nas verificações, o admin está logado
+        return true;
     }
 
     // 1. SALVAR CONFIGURAÇÃO LOCAL (PIX)
@@ -77,6 +96,7 @@
 
     // 2. CARREGAR MEMBROS DO SUPABASE
     async function carregarMembros() {
+        // Esta função agora confia que o usuário já foi verificado como admin pelo onload
         const { data: membros, error } = await _supabase
             .from('membros')
             .select('*')
@@ -104,8 +124,8 @@
                 <div class="item-membro">
                     <span><strong>${m.usuario}</strong><br><small>${m.email}</small></span>
                     <div>
-                        <button class="btn-acao btn-aprovar" onclick="aprovarMembro(${m.id})">APROVAR</button>
-                        <button class="btn-acao btn-excluir" onclick="excluirMembro(${m.id})">X</button>
+                        <button class="btn-acao btn-aprovar" onclick="aprovarMembro('${m.id}')">APROVAR</button>
+                        <button class="btn-acao btn-excluir" onclick="excluirMembro('${m.id}')">X</button>
                     </div>
                 </div>`;
         });
@@ -114,12 +134,12 @@
             divA.innerHTML += `
                 <div class="item-membro">
                     <span><strong>${m.usuario}</strong><br><small>Acesso VIP</small></span>
-                    <button class="btn-acao btn-excluir" onclick="bloquearMembro(${m.id})">BLOQUEAR</button>
+                    <button class="btn-acao btn-excluir" onclick="bloquearMembro('${m.id}')">BLOQUEAR</button>
                 </div>`;
         });
     }
 
-    // AÇÕES DO BANCO DE DADOS
+    // AÇÕES DO BANCO DE DADOS (IDs agora são strings UUID)
     async function aprovarMembro(id) {
         if(confirm("Liberar acesso VIP para este usuário?")) {
             const { error } = await _supabase.from('membros').update({ aprovado: true }).eq('id', id);
@@ -141,12 +161,15 @@
         }
     }
 
-    // INICIALIZAÇÃO
-    window.onload = function() {
-        carregarMembros();
-        document.getElementById('input-valor').value = localStorage.getItem('valorPixAtivo') || "";
-        document.getElementById('input-chave').value = localStorage.getItem('chavePixAtiva') || "";
-        document.getElementById('input-foto-valor').value = localStorage.getItem('fotoValorAtiva') || "";
+    // INICIALIZAÇÃO ASÍNCRONA
+    window.onload = async function() {
+        const isAdmin = await verificarAdminLogado();
+        if (isAdmin) {
+            carregarMembros();
+            document.getElementById('input-valor').value = localStorage.getItem('valorPixAtivo') || "";
+            document.getElementById('input-chave').value = localStorage.getItem('chavePixAtiva') || "";
+            document.getElementById('input-foto-valor').value = localStorage.getItem('fotoValorAtiva') || "";
+        }
     };
 </script>
 
