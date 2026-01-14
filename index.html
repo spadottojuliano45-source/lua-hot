@@ -7,54 +7,86 @@
     <title>Lilith Crow (Lua Hot)</title>
     <link rel="stylesheet" href="style.css">
 
-<script>
-    // Sistema de Liberação Administrativa 2026
-    document.addEventListener("DOMContentLoaded", function() {
-        const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
-        const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+    <!-- SUPABASE CORE 2026 -->
+    <script src="cdn.jsdelivr.net"></script>
 
-        if (isAdmin || isMembro) {
-            console.log("Acesso Confirmado 2026: Liberando links...");
+    <script>
+        // Configurações do seu Supabase
+        const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
+        const SUPABASE_KEY = 'SUA_SERVICE_ROLE_KEY_AQUI'; // <--- COLE SUA CHAVE AQUI
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            const links = document.querySelectorAll('nav ul li a');
-            links.forEach(link => {
-                link.classList.remove('travado'); 
-                link.style.opacity = "1";
-                link.style.cursor = "pointer";
+        document.addEventListener("DOMContentLoaded", async function() {
+            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+            const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+            const nomeUsuario = localStorage.getItem('nomeUsuario');
+
+            // Validação de segurança extra com o banco de dados
+            let acessoLiberado = isAdmin;
+
+            if (isMembro && nomeUsuario) {
+                const { data, error } = await _supabase
+                    .from('usuarios')
+                    .select('aprovado')
+                    .eq('usuario', nomeUsuario)
+                    .single();
                 
-                // Ajusta os destinos para a página que tem o conteúdo e o chat
-                if(link.innerText.includes("Fotos")) link.href = "login.liberado.html";
-                if(link.innerText.includes("Videos")) link.href = "login.liberado.html";
-                if(link.innerText.includes("Chat")) {
-                    link.href = "login.liberado.html";
-                    link.onclick = null; // Remove a função antiga que travava o link
+                if (!error && data.aprovado) {
+                    acessoLiberado = true;
+                } else {
+                    // Se não estiver aprovado no banco, limpa a sessão
+                    sessionStorage.removeItem('logadoMembro');
+                    acessoLiberado = false;
                 }
-            });
-
-            const foto = document.getElementById('foto-principal');
-            if(foto) {
-                foto.style.pointerEvents = "auto";
             }
 
-            const btnLogin = document.getElementById('btn-login');
-            if(btnLogin) {
-                btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR";
-                btnLogin.style.color = "#ff0000";
-                btnLogin.href = "javascript:void(0)";
-                btnLogin.onclick = function() {
-                    sessionStorage.removeItem('logadoAdmin');
-                    sessionStorage.removeItem('logadoMembro');
-                    location.reload(); 
-                };
+            if (acessoLiberado) {
+                console.log("Acesso Confirmado 2026: Liberando links...");
+                const links = document.querySelectorAll('nav ul li a');
+                links.forEach(link => {
+                    if (link.classList.contains('travado')) {
+                        link.classList.remove('travado'); 
+                        link.style.opacity = "1";
+                        link.style.cursor = "pointer";
+                        link.href = "login.liberado.html";
+                        link.onclick = null;
+                    }
+                });
+
+                const foto = document.getElementById('foto-principal');
+                if(foto) foto.style.pointerEvents = "auto";
+
+                const btnLogin = document.getElementById('btn-login');
+                if(btnLogin) {
+                    btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR";
+                    btnLogin.style.color = "#ff0000";
+                    btnLogin.href = "javascript:void(0)";
+                    btnLogin.onclick = function() {
+                        sessionStorage.clear();
+                        localStorage.removeItem('nomeUsuario');
+                        location.reload(); 
+                    };
+                }
+            }
+        });
+
+        function verificarAcesso(url) {
+            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
+            const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
+
+            if (isAdmin || isMembro) {
+                window.location.href = url;
+            } else {
+                alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes.");
+                window.location.href = "login.html";
             }
         }
-    });
-</script>
+    </script>
 </head>
 <body>
 
     <style>
-        /* Mantendo seu layout original */
+        /* Mantendo seu layout original exatamente como solicitado */
         img {
             -webkit-user-drag: none;
             user-select: none;
@@ -71,7 +103,6 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="materias.html">Materias</a></li>
             
-            <!-- Links ajustados para chamar a função de verificação -->
             <li><a href="javascript:void(0)" class="travado" id="link-fotos" onclick="verificarAcesso('login.liberado.html')">Fotos</a></li>
             <li><a href="javascript:void(0)" class="travado" id="link-videos" onclick="verificarAcesso('login.liberado.html')">Videos</a></li>
             <li><a href="javascript:void(0)" class="travado" id="link-chat" onclick="verificarAcesso('login.liberado.html')">Chat ao Vivo</a></li>
@@ -92,18 +123,5 @@
         <h3>CLIQUE EM LOGIN NO MENU PRINCIPAL E SE CADASTRE E ACESSE OS CONTEÚDOS EXCLUSIVOS!</h3>
     </main>
 
-    <script>
-        function verificarAcesso(url) {
-            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
-            const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
-
-            if (isAdmin || isMembro) {
-                window.location.href = url;
-            } else {
-                alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes.");
-                window.location.href = "login.html";
-            }
-        }
-    </script>
 </body>
 </html>
