@@ -48,13 +48,13 @@
     <!-- CADASTRO -->
     <div id="tab-cadastro" class="content">
         <img src="" id="img-oferta" alt="Oferta Especial">
-        <form id="my-form" action="formspree.io" method="POST">
+        <form id="my-form">
             <label>Nome de Usuário:</label>
             <input type="text" name="usuario" id="reg-usuario" required>
             <label>Email:</label>
-            <input type="email" name="email" required>
+            <input type="email" name="email" id="reg-email" required>
             <label>Crie sua Senha:</label>
-            <input type="password" name="senha" required>
+            <input type="password" name="senha" id="reg-pass" required>
 
             <div class="pix-box">
                 <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
@@ -70,8 +70,13 @@
     </div>
 </div>
 
+<!-- Scripts Supabase -->
+<script src="cdn.jsdelivr.net"></script>
 <script>
-    // Sincronização de Dados 2026
+    const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
+    const SUPABASE_KEY = 'SUA_SERVICE_ROLE_KEY_AQUI'; // <--- COLE SUA CHAVE AQUI
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -90,70 +95,66 @@
         document.getElementById(tabId).classList.add('active');
     }
 
-    // LOGIN: Identifica o nome para todo o site
-    document.getElementById('form-login').onsubmit = function(e) {
+    // --- LÓGICA DE LOGIN ---
+    document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
 
-        // Regra do Administrador
+        // Regra Admin
         if (u === "spadottojuliano45@gmail.com" && p === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
-            localStorage.setItem('nomeUsuario', 'Lua Hot'); // Nome fixo da Admin
+            localStorage.setItem('nomeUsuario', 'Lua - Hot');
             window.location.href = confirm("Olá Lua! Ir para o Painel?") ? "admin.html" : "login.liberado.html";
             return;
         }
 
-        // Regra do Membro
-        let ativos = JSON.parse(localStorage.getItem('membrosAtivos') || "[]");
-        let membro = ativos.find(m => (m.email === u || m.usuario === u) && m.senha === p);
-        
-        if(membro) {
-            sessionStorage.setItem('logadoMembro', 'true');
-            localStorage.setItem('nomeUsuario', membro.usuario); // Define o nome de navegação
-            window.location.href = "login.liberado.html";
+        // Busca no Supabase
+        const { data, error } = await _supabase
+            .from('usuarios')
+            .select('*')
+            .or(`email.eq."${u}",usuario.eq."${u}"`)
+            .eq('senha', p)
+            .single();
+
+        if (error || !data) {
+            alert("Acesso negado ou dados incorretos!");
+        } else if (!data.aprovado) {
+            alert("Cadastro aguardando liberação de pagamento!");
         } else {
-            alert("Acesso negado ou aguardando aprovação!");
+            sessionStorage.setItem('logadoMembro', 'true');
+            localStorage.setItem('nomeUsuario', data.usuario);
+            window.location.href = "login.liberado.html";
         }
     };
 
-    // CADASTRO: Registra o nome pretendido
-    var form = document.getElementById("my-form");
-    form.onsubmit = async function(event) {
-      event.preventDefault();
-      var status = document.getElementById("my-form-status");
-      var button = document.getElementById("my-form-button");
-      var formData = new FormData(form);
-      
-      button.disabled = true;
-      button.innerText = "Enviando...";
+    // --- LÓGICA DE CADASTRO ---
+    document.getElementById('my-form').onsubmit = async function(event) {
+        event.preventDefault();
+        const status = document.getElementById("my-form-status");
+        const button = document.getElementById("my-form-button");
+        
+        button.disabled = true;
+        button.innerText = "Enviando...";
 
-      const nomeUsuario = document.getElementById('reg-usuario').value;
+        const novoUsuario = {
+            usuario: document.getElementById('reg-usuario').value,
+            email: document.getElementById('reg-email').value,
+            senha: document.getElementById('reg-pass').value,
+            aprovado: false
+        };
 
-      let pendentes = JSON.parse(localStorage.getItem('pendentes') || "[]");
-      pendentes.push({
-          usuario: nomeUsuario,
-          email: formData.get('email'),
-          senha: formData.get('senha'),
-          dataCadastro: new Date().toLocaleString('pt-BR')
-      });
-      localStorage.setItem('pendentes', JSON.stringify(pendentes));
+        const { error } = await _supabase.from('usuarios').insert([novoUsuario]);
 
-      fetch(event.target.action, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      }).then(response => {
-        if (response.ok) {
-          status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado!<br>O nome <b>"+nomeUsuario+"</b> será liberado após o pagamento.</span>";
-          form.reset();
-          button.style.display = "none";
+        if (error) {
+            status.innerHTML = "<span style='color:red'>Erro: Usuário ou e-mail já cadastrado.</span>";
+            button.disabled = false;
+            button.innerText = "ENVIAR CADASTRO";
         } else {
-          status.innerHTML = "<span style='color:red'>Erro no servidor.</span>";
-          button.disabled = false;
-          button.innerText = "ENVIAR CADASTRO";
+            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado!<br>O nome <b>"+novoUsuario.usuario+"</b> será liberado após o pagamento.</span>";
+            document.getElementById('my-form').reset();
+            button.style.display = "none";
         }
-      });
     };
 </script>
 </body>
