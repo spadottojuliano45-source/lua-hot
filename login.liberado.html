@@ -35,6 +35,7 @@
 <body oncontextmenu="return false;">
 
     <div class="chat-container">
+        <!-- Overlay de Videochamada -->
         <div id="video-overlay">
             <video id="webcam" autoplay playsinline></video>
             <div class="video-btns">
@@ -72,7 +73,7 @@
         </div>
     </div>
 
-    <!-- SUPABASE CORE -->
+    <!-- SUPABASE CORE 2026 -->
     <script src="cdn.jsdelivr.net"></script>
     <script>
         const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
@@ -87,7 +88,7 @@
         const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
         const usuarioNome = localStorage.getItem('nomeUsuario') || "Membro VIP";
 
-        // PROTEÇÃO DE PÁGINA: Verifica se está logado
+        // PROTEÇÃO DE PÁGINA
         if(!sessionStorage.getItem('logadoAdmin') && !sessionStorage.getItem('logadoMembro')) {
             window.location.href = "login.html";
         }
@@ -99,7 +100,7 @@
             document.getElementById('message-input').addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
         });
 
-        // ESCUTAR MENSAGENS EM TEMPO REAL
+        // 1. REALTIME - ESCUTAR MENSAGENS
         function subscribeChat() {
             _supabase.channel('public:mensagens')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
@@ -108,8 +109,9 @@
             .subscribe();
         }
 
+        // 2. CARREGAR HISTÓRICO
         async function loadMessages() {
-            const { data, error } = await _supabase.from('mensagens').select('*').order('created_at', { ascending: true }).limit(50);
+            const { data, error } = await _supabase.from('mensagens').select('*').order('created_at', { ascending: true }).limit(100);
             if(!error) {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = '';
@@ -117,6 +119,7 @@
             }
         }
 
+        // 3. EXIBIR NA TELA
         function displayMessage(msg) {
             const box = document.getElementById('chat-box');
             const isLua = msg.remetente === 'Lua - Hot';
@@ -133,30 +136,31 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // 4. ENVIAR MENSAGEM
         async function sendMessage() {
             const input = document.getElementById('message-input');
             const texto = input.value.trim();
             if (!texto) return;
-            
             input.value = '';
-            await _supabase.from('mensagens').insert([{ 
-                remetente: isAdmin ? 'Lua - Hot' : usuarioNome, 
-                conteudo: texto, 
-                tipo: 'text' 
-            }]);
+            await _supabase.from('mensagens').insert([{ remetente: isAdmin ? 'Lua - Hot' : usuarioNome, conteudo: texto, tipo: 'text' }]);
         }
 
+        // 5. MÍDIA
         async function postMedia(url, type) {
-            await _supabase.from('mensagens').insert([{ 
-                remetente: isAdmin ? 'Lua - Hot' : usuarioNome, 
-                conteudo: url, 
-                tipo: type 
-            }]);
+            await _supabase.from('mensagens').insert([{ remetente: isAdmin ? 'Lua - Hot' : usuarioNome, conteudo: url, tipo: type }]);
         }
 
-        // --- Video e Audio (Mantidos conforme original) ---
+        function sendMedia(e) {
+            const f = e.target.files[0];
+            if(!f) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => postMedia(ev.target.result, f.type.startsWith('video') ? 'vid' : 'img');
+            reader.readAsDataURL(f);
+        }
+
+        // 6. VIDEO E AUDIO
         async function chamarVideo() {
-            const confirmacao = confirm("ATENÇÃO: A videochamada tem um custo adicional de R$ 50,00 a cada 30 minutos. Deseja continuar?");
+            const confirmacao = confirm("ATENÇÃO: A videochamada custa R$ 50,00 por 30min. Continuar?");
             if (!confirmacao) return;
             const over = document.getElementById('video-overlay');
             const vid = document.getElementById('webcam');
@@ -164,20 +168,13 @@
             try {
                 const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 vid.srcObject = s;
-            } catch(e) { alert("Erro na câmera."); over.style.display = 'none'; }
+            } catch(e) { alert("Câmera não autorizada."); over.style.display = 'none'; }
         }
 
         function pararChamada() {
             const vid = document.getElementById('webcam');
             if(vid.srcObject) vid.srcObject.getTracks().forEach(t => t.stop());
             document.getElementById('video-overlay').style.display = 'none';
-        }
-
-        function sendMedia(e) {
-            const f = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (ev) => postMedia(ev.target.result, f.type.startsWith('video') ? 'vid' : 'img');
-            reader.readAsDataURL(f);
         }
 
         async function toggleMic() {
@@ -197,14 +194,8 @@
         }
 
         function addEmoji(e) { document.getElementById('message-input').value += e; }
-        
-        async function clearHistory() { 
-            if(confirm("Limpar todo o histórico do banco?")) {
-                await _supabase.from('mensagens').delete().neq('id', 0);
-                document.getElementById('chat-box').innerHTML = '';
-            } 
-        }
-
+        function openChat(id, name) { activeId = id; document.getElementById('chat-title').innerText = `Conversando com: ${name}`; }
+        async function clearHistory() { if(confirm("Limpar histórico?")) { await _supabase.from('mensagens').delete().neq('id', 0); location.reload(); } }
         function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
     </script>
 </body>
