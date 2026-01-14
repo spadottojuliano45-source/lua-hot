@@ -58,9 +58,9 @@
 
             <div class="pix-box">
                 <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
-                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">[CPF AQUI]</span><br>
+                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
                 Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
-                Mande o print para: <strong>[NÚMERO DE TELEFONE AQUI]</strong>
+                Mande o print para: <strong>(14) 99869-9358</strong>
             </div>
             <br>
             <button id="my-form-button" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
@@ -70,13 +70,15 @@
     </div>
 </div>
 
-<!-- Biblioteca Supabase 2026 Corrigida -->
+<!-- Scripts Supabase CORRIGIDOS 2026 -->
 <script src="cdn.jsdelivr.net"></script>
 <script>
+    // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // Sincronização de valores do PIX (Preservado do seu original)
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -129,10 +131,10 @@
     // --- LÓGICA DE CADASTRO ---
     const formCad = document.getElementById("my-form");
     formCad.onsubmit = async function(event) {
-        event.preventDefault();
+        event.preventDefault(); 
         const status = document.getElementById("my-form-status");
         const button = document.getElementById("my-form-button");
-
+        
         button.disabled = true;
         button.innerText = "Enviando...";
 
@@ -143,11 +145,12 @@
             aprovado: false
         };
 
+        // Envia para o Supabase na tabela membros
         const { error } = await _supabase.from('membros').insert([novoUsuario]);
 
         if (error) {
-            console.error(error);
-            status.innerHTML = "<span style='color:red'>Erro no cadastro. Tente outro e-mail.</span>";
+            console.error("Erro Supabase:", error);
+            status.innerHTML = "<span style='color:red'>Erro no servidor. Tente outro e-mail.</span>";
             button.disabled = false;
             button.innerText = "ENVIAR CADASTRO";
         } else {
