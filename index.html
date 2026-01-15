@@ -7,21 +7,17 @@
     <title>Lilith Crow (Lua Hot)</title>
     <link rel="stylesheet" href="style.css">
 
-    <!-- SUPABASE CORE 2026 - FIX: Link do CDN corrigido para carregar a biblioteca -->
+    <!-- SUPABASE CORE 2026 -->
     <script src="cdn.jsdelivr.net"></script>
 
     <script>
-        // Configurações Reais 2026
         const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
         
-        // Inicialização garantindo que o objeto supabase existe
         let _supabase;
         try {
             _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (e) {
-            console.error("Erro ao carregar Supabase. Verifique a conexão.");
-        }
+        } catch (e) { console.error("Erro Supabase:", e); }
 
         document.addEventListener("DOMContentLoaded", async function() {
             const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
@@ -30,7 +26,7 @@
 
             let acessoLiberado = isAdmin;
 
-            // Verificação de Membro Ativo no Banco
+            // Validação em tempo real com seu banco
             if (isMembro && nomeUsuario && _supabase) {
                 const { data, error } = await _supabase
                     .from('membros')
@@ -42,80 +38,56 @@
                     acessoLiberado = true;
                 } else {
                     sessionStorage.removeItem('logadoMembro');
-                    acessoLiberado = false;
                 }
             }
 
-            // AÇÃO DE DESTRAVAR (Sem mudar de página)
+            // SE LOGADO: Libera tudo sem mudar de página
             if (acessoLiberado) {
-                console.log("Acesso Confirmado 2026: Liberando links...");
-                
-                // Seleciona os links que estavam travados
-                const linksParaLiberar = document.querySelectorAll('.travado');
-                linksParaLiberar.forEach(link => {
-                    link.classList.remove('travado'); 
-                    link.style.opacity = "1";
-                    link.style.cursor = "pointer";
-                    link.onclick = null; // Remove o alerta de bloqueio
+                const links = {
+                    'link-fotos': 'fotos.html',
+                    'link-videos': 'videos.html',
+                    'link-chat': 'chat.html'
+                };
 
-                    // Aqui você define para onde cada link vai após o login
-                    if(link.id === 'link-fotos') link.href = "fotos-exclusivas.html";
-                    if(link.id === 'link-videos') link.href = "videos-exclusivos.html";
-                    if(link.id === 'link-chat') link.href = "chat-ao-vivo.html";
+                Object.keys(links).forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.remove('travado');
+                        el.href = links[id];
+                        el.onclick = null; // Remove o alerta
+                        el.style.opacity = "1";
+                    }
                 });
 
-                // Destrava a foto principal
+                // Libera a Foto Principal
                 const foto = document.getElementById('foto-principal');
                 if(foto) {
                     foto.style.pointerEvents = "auto";
-                    foto.style.filter = "none"; 
+                    foto.style.filter = "none";
                 }
 
-                // Altera o botão de Login para Sair
+                // Troca Botão Login para Sair
                 const btnLogin = document.getElementById('btn-login');
                 if(btnLogin) {
-                    btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR (" + nomeUsuario + ")";
-                    btnLogin.style.color = "#ff0000";
-                    btnLogin.href = "javascript:void(0)";
-                    btnLogin.onclick = function() {
-                        sessionStorage.clear();
-                        localStorage.removeItem('nomeUsuario');
-                        location.reload(); 
-                    };
+                    btnLogin.innerText = "SAIR (" + (nomeUsuario || "ADMIN") + ")";
+                    btnLogin.style.color = "#ff4444";
+                    btnLogin.href = "#";
+                    btnLogin.onclick = () => { sessionStorage.clear(); location.reload(); };
                 }
             }
         });
 
-        // Função de Alerta para quem não está logado
-        function verificarAcesso(url) {
-            const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
-            const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
-
-            if (isAdmin || isMembro) {
-                // Se por algum motivo o link ainda disparar o onclick estando logado
-                window.location.href = url;
-            } else {
-                alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes.");
-                window.location.href = "login.html";
-            }
+        function verificarAcesso() {
+            alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes ativos.");
+            window.location.href = "login.html";
         }
     </script>
 </head>
 <body>
 
     <style>
-        /* Layout original preservado */
-        img {
-            -webkit-user-drag: none;
-            user-select: none;
-            pointer-events: none; 
-        }
-        /* Classe que controla o visual travado */
-        .travado {
-            cursor: not-allowed !important;
-            opacity: 0.4 !important;
-            color: gray !important;
-        }
+        img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+        .travado { cursor: not-allowed !important; opacity: 0.4 !important; filter: grayscale(100%); }
     </style>
 
     <nav>
@@ -123,7 +95,7 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="materias.html">Materias</a></li>
             
-            <!-- Os links começam como 'javascript:void(0)' para não navegar antes do login -->
+            <!-- Links começam travados por padrão -->
             <li><a href="javascript:void(0)" class="travado" id="link-fotos" onclick="verificarAcesso()">Fotos</a></li>
             <li><a href="javascript:void(0)" class="travado" id="link-videos" onclick="verificarAcesso()">Videos</a></li>
             <li><a href="javascript:void(0)" class="travado" id="link-chat" onclick="verificarAcesso()">Chat ao Vivo</a></li>
@@ -133,15 +105,14 @@
     </nav>
 
     <header>
-        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal" style="transition: 0.5s;">
+        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal" style="transition: 0.5s; filter: blur(5px);">
     </header>
 
     <main>
-        <h1>Bem vindos ao site HOT de Lilith Crow(LUA).</h1>
+        <h1>Bem vindos ao site HOT de Lilith Crow (LUA).</h1>
         <br>
-        <h2>ASSINEM AGORA E VEJA, OS CONTEÚDOS EXCLUSIVOS.</h2>
-        <h3>Fotos, Vídeos e Chat ao Vivo, só é permitido acesso com a assinatura mensal.</h3>
-        <h3>CLIQUE EM LOGIN NO MENU PRINCIPAL E SE CADASTRE E ACESSE OS CONTEÚDOS EXCLUSIVOS!</h3>
+        <h2>ASSINEM AGORA E VEJA OS CONTEÚDOS EXCLUSIVOS.</h2>
+        <h3>Fotos, Vídeos e Chat ao Vivo são permitidos apenas com assinatura.</h3>
     </main>
 
 </body>
