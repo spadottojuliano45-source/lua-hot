@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Lilith Crow</title>
     <style>
-        /* LAYOUT ORIGINAL PRESERVADO - NÃO MEXER */
+        /* LAYOUT ORIGINAL PRESERVADO */
         body { font-family: Arial, sans-serif; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: #111; border: 1px solid #ff0000; width: 100%; max-width: 400px; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(255,0,0,0.4); position: relative; }
         .btn-voltar-topo { position: absolute; top: 12px; left: 12px; color: #aaa; text-decoration: none; font-size: 11px; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; z-index: 10; background: #111; }
@@ -20,14 +20,12 @@
         .btn-cancelar { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 5px; background: transparent; color: #aaa; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; box-sizing: border-box; font-size: 14px; }
         .pix-box { margin-top: 15px; padding: 12px; border: 1px dashed #444; border-radius: 5px; font-size: 13px; background: #1a1a1a; line-height: 1.5; }
         .status-msg { margin-top: 15px; font-size: 14px; text-align: center; font-weight: bold; line-height: 1.4; }
-        #img-oferta { width: 100%; margin-bottom: 15px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div class="card">
     <a href="index.html" class="btn-voltar-topo">← VOLTAR</a>
-
     <div class="tabs">
         <div class="tab active" onclick="switchTab(event, 'tab-login')">LOGIN</div>
         <div class="tab" onclick="switchTab(event, 'tab-cadastro')">CADASTRO</div>
@@ -47,22 +45,17 @@
 
     <!-- CADASTRO -->
     <div id="tab-cadastro" class="content">
-        <img src="" id="img-oferta" alt="Oferta Especial">
         <form id="form-cadastro">
             <label>Nome de Usuário:</label>
-            <input type="text" name="usuario" id="reg-usuario" required>
+            <input type="text" id="reg-usuario" required>
             <label>Email:</label>
-            <input type="email" name="email" id="reg-email" required>
+            <input type="email" id="reg-email" required>
             <label>Crie sua Senha:</label>
-            <input type="password" name="senha" id="reg-pass" required>
-
+            <input type="password" id="reg-pass" required>
             <div class="pix-box">
-                <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
-                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
-                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
-                Mande o print para: <strong>(14) 99869-9358</strong>
-            </div>
-            <br>
+                <strong style="color: #ff0000;">PAGAMENTO:</strong> Chave PIX:<br>
+                <span style="color:#00ff00; font-weight:bold;">307.759.588-59</span>
+            </div><br>
             <button id="btn-cadastro-submit" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
             <a href="index.html" class="btn-cancelar">CANCELAR</a>
             <div id="status-cadastro" class="status-msg"></div>
@@ -70,39 +63,28 @@
     </div>
 </div>
 
-<!-- Scripts Supabase 2026 -->
+<!-- BIBLIOTECA SUPABASE CORRIGIDA -->
 <script src="cdn.jsdelivr.net"></script>
+
 <script>
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function atualizarValoresDinamicos() {
-        const valorSalvo = localStorage.getItem('valorPixAtivo');
-        const chaveSalva = localStorage.getItem('chavePixAtiva');
-        const fotoSalva = localStorage.getItem('fotoValorAtiva');
-        if(valorSalvo) document.getElementById('txt-valor').innerText = "R$ " + valorSalvo;
-        if(chaveSalva) document.getElementById('txt-chave').innerText = chaveSalva;
-        const imgOferta = document.getElementById('img-oferta');
-        if(fotoSalva && fotoSalva.trim() !== "") { imgOferta.src = fotoSalva; imgOferta.style.display = "block"; }
-    }
-    window.onload = atualizarValoresDinamicos;
 
     function switchTab(event, tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
         if(event) event.currentTarget.classList.add('active');
-        else document.querySelector(`[onclick*="${tabId}"]`).classList.add('active');
         document.getElementById(tabId).classList.add('active');
     }
 
-    // --- LÓGICA DE LOGIN ---
+    // --- LOGIN ---
     document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
         const emailInput = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
 
-        // 1. LOGIN ADMIN (ACESSO TOTAL)
+        // ACESSO ADMIN DIRETO (Independente do banco)
         if (emailInput === "spadottojuliano45@gmail.com" && pass === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Administrador');
@@ -110,77 +92,43 @@
             return;
         }
 
-        // 2. LOGIN MEMBRO
-        const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
-            email: emailInput,
-            password: pass,
-        });
-
-        if (authError) {
-            alert("Acesso negado. Verifique seu e-mail e senha.");
-            return;
-        }
-
-        if (authData.user) {
-            const { data: membroData, error: membroError } = await _supabase
-                .from('membros')
-                .select('*')
-                .eq('id', authData.user.id)
-                .single();
-
-            if (membroError || !membroData) {
-                alert("Erro ao encontrar perfil. Contate o suporte.");
-                await _supabase.auth.signOut(); 
-                return;
-            }
-
-            if (!membroData.aprovado) {
-                alert("Sua conta está aguardando aprovação de pagamento!");
-                await _supabase.auth.signOut(); 
-                return;
-            } else {
+        // LOGIN MEMBRO
+        const { data, error } = await _supabase.auth.signInWithPassword({ email: emailInput, password: pass });
+        if (error) {
+            alert("Erro: " + error.message);
+        } else {
+            const { data: perfil } = await _supabase.from('membros').select('aprovado').eq('id', data.user.id).single();
+            if (perfil && perfil.aprovado) {
                 sessionStorage.setItem('logadoMembro', 'true');
-                localStorage.setItem('nomeUsuario', membroData.usuario);
-                window.location.href = "index.html"; 
+                localStorage.setItem('nomeUsuario', emailInput);
+                window.location.href = "index.html";
+            } else {
+                alert("Aguardando aprovação do PIX!");
+                await _supabase.auth.signOut();
             }
         }
     };
 
-    // --- LÓGICA DE CADASTRO ---
-    const formCad = document.getElementById("form-cadastro");
-    formCad.onsubmit = async function(event) {
-        event.preventDefault();
-        const usuario = document.getElementById("reg-usuario").value.trim();
-        const email = document.getElementById("reg-email").value.trim();
-        const senha = document.getElementById("reg-pass").value.trim();
-        const statusEl = document.getElementById("status-cadastro");
-        statusEl.innerText = "Enviando...";
+    // --- CADASTRO ---
+    document.getElementById('form-cadastro').onsubmit = async function(e) {
+        e.preventDefault();
+        const status = document.getElementById('status-cadastro');
+        const usuario = document.getElementById('reg-usuario').value;
+        const email = document.getElementById('reg-email').value;
+        const senha = document.getElementById('reg-pass').value;
 
-        const { data: authData, error: authError } = await _supabase.auth.signUp({
-            email: email,
-            password: senha,
-        });
+        status.innerText = "Cadastrando...";
+        const { data, error } = await _supabase.auth.signUp({ email, password: senha });
 
-        if (authError) {
-            statusEl.innerText = "Erro no cadastro: " + authError.message;
-            return;
-        }
-
-        if (authData.user) {
-            const { error: dbError } = await _supabase
-                .from('membros')
-                .insert([{ id: authData.user.id, usuario: usuario, email: email, aprovado: false }]);
-
-            if (dbError) {
-                statusEl.innerText = "Erro ao salvar perfil.";
-                return;
-            }
-
-            statusEl.innerText = "Cadastro enviado! Aguardando aprovação do PIX.";
-            statusEl.style.color = "#00ff00";
-            formCad.reset();
-            alert("Cadastro realizado! Mande o print do PIX para liberar o acesso.");
-            switchTab(null, 'tab-login');
+        if (error) {
+            status.innerText = "Erro: " + error.message;
+            status.style.color = "red";
+        } else {
+            await _supabase.from('membros').insert([{ id: data.user.id, usuario, email, aprovado: false }]);
+            status.innerText = "Sucesso! Mande o PIX e aguarde aprovação.";
+            status.style.color = "#00ff00";
+            alert("Cadastro realizado! Faça login após pagar.");
+            location.reload();
         }
     };
 </script>
