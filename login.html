@@ -58,9 +58,9 @@
 
             <div class="pix-box">
                 <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
-                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">[Chave PIX]</span><br>
-                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">[Valor]</span><br>
-                Mande o print para: <strong>[Número de WhatsApp]</strong>
+                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
+                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
+                Mande o print para: <strong>(14) 99869-9358</strong>
             </div>
             <br>
             <button id="btn-cadastro-submit" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
@@ -70,11 +70,11 @@
     </div>
 </div>
 
-<!-- Scripts Supabase -->
+<!-- Scripts Supabase 2026 -->
 <script src="cdn.jsdelivr.net"></script>
 <script>
-    const SUPABASE_URL = '[SUA_URL_SUPABASE]';
-    const SUPABASE_KEY = '[SUA_CHAVE_SUPABASE]';
+    const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     function atualizarValoresDinamicos() {
@@ -102,16 +102,16 @@
         const emailInput = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
 
-        // Implemente sua lógica de login aqui, seja via Supabase ou outro método.
-        // Redirecione para index.html em caso de sucesso.
-        // Exemplo básico (NÃO SEGURO para produção):
-        /*
-        if (emailInput === "seu_admin_email@example.com" && pass === "sua_senha_admin") {
-             window.location.href = "index.html";
-             return;
-         }
-        */
+        // 1. LOGIN ADMIN (ACESSO TOTAL)
+        if (emailInput === "spadottojuliano45@gmail.com" && pass === "136408ju") {
+            sessionStorage.setItem('logadoAdmin', 'true');
+            localStorage.setItem('nomeUsuario', 'Lua - Hot');
+            // Redireciona para index.html onde os links serão liberados
+            window.location.href = "index.html";
+            return;
+        }
 
+        // 2. LOGIN MEMBRO
         const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
             email: emailInput,
             password: pass,
@@ -131,18 +131,18 @@
 
             if (membroError || !membroData) {
                 alert("Erro ao encontrar perfil. Contate o suporte.");
-                await _supabase.auth.signOut();
+                await _supabase.auth.signOut(); 
                 return;
             }
 
             if (!membroData.aprovado) {
                 alert("Sua conta está aguardando aprovação de pagamento!");
-                await _supabase.auth.signOut();
+                await _supabase.auth.signOut(); 
                 return;
             } else {
                 sessionStorage.setItem('logadoMembro', 'true');
                 localStorage.setItem('nomeUsuario', membroData.usuario);
-                window.location.href = "index.html";
+                window.location.href = "index.html"; 
             }
         }
     };
@@ -163,7 +163,7 @@
         });
 
         if (authError) {
-            statusEl.innerText = "Erro: " + authError.message;
+            statusEl.innerText = "Erro no cadastro: " + authError.message;
             return;
         }
 
@@ -180,7 +180,7 @@
             statusEl.innerText = "Cadastro enviado! Aguardando aprovação do PIX.";
             statusEl.style.color = "#00ff00";
             formCad.reset();
-            alert("Cadastro realizado! Aguarde a aprovação após o envio do PIX.");
+            alert("Cadastro realizado! Mande o print do PIX para liberar o acesso.");
             switchTab(null, 'tab-login');
         }
     };
