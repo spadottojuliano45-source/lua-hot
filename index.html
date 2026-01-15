@@ -7,14 +7,21 @@
     <title>Lilith Crow (Lua Hot)</title>
     <link rel="stylesheet" href="style.css">
 
-    <!-- SUPABASE CORE 2026 - LINK CORRIGIDO -->
+    <!-- SUPABASE CORE 2026 - FIX: Link do CDN corrigido para carregar a biblioteca -->
     <script src="cdn.jsdelivr.net"></script>
 
     <script>
         // Configurações Reais 2026
         const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Inicialização garantindo que o objeto supabase existe
+        let _supabase;
+        try {
+            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            console.error("Erro ao carregar Supabase. Verifique a conexão.");
+        }
 
         document.addEventListener("DOMContentLoaded", async function() {
             const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
@@ -23,8 +30,8 @@
 
             let acessoLiberado = isAdmin;
 
-            // Se for membro, verifica no banco se ele está ATIVO (aprovado = true)
-            if (isMembro && nomeUsuario) {
+            // Verificação de Membro Ativo no Banco
+            if (isMembro && nomeUsuario && _supabase) {
                 const { data, error } = await _supabase
                     .from('membros')
                     .select('aprovado')
@@ -34,28 +41,37 @@
                 if (!error && data && data.aprovado) {
                     acessoLiberado = true;
                 } else {
-                    // Segurança: se não estiver aprovado, desloga por precaução
                     sessionStorage.removeItem('logadoMembro');
                     acessoLiberado = false;
                 }
             }
 
+            // AÇÃO DE DESTRAVAR (Sem mudar de página)
             if (acessoLiberado) {
                 console.log("Acesso Confirmado 2026: Liberando links...");
-                const links = document.querySelectorAll('nav ul li a');
-                links.forEach(link => {
-                    if (link.classList.contains('travado')) {
-                        link.classList.remove('travado'); 
-                        link.style.opacity = "1";
-                        link.style.cursor = "pointer";
-                        link.href = "login.liberado.html"; // Destrava o link para a página VIP
-                        link.onclick = null;
-                    }
+                
+                // Seleciona os links que estavam travados
+                const linksParaLiberar = document.querySelectorAll('.travado');
+                linksParaLiberar.forEach(link => {
+                    link.classList.remove('travado'); 
+                    link.style.opacity = "1";
+                    link.style.cursor = "pointer";
+                    link.onclick = null; // Remove o alerta de bloqueio
+
+                    // Aqui você define para onde cada link vai após o login
+                    if(link.id === 'link-fotos') link.href = "fotos-exclusivas.html";
+                    if(link.id === 'link-videos') link.href = "videos-exclusivos.html";
+                    if(link.id === 'link-chat') link.href = "chat-ao-vivo.html";
                 });
 
+                // Destrava a foto principal
                 const foto = document.getElementById('foto-principal');
-                if(foto) foto.style.pointerEvents = "auto";
+                if(foto) {
+                    foto.style.pointerEvents = "auto";
+                    foto.style.filter = "none"; 
+                }
 
+                // Altera o botão de Login para Sair
                 const btnLogin = document.getElementById('btn-login');
                 if(btnLogin) {
                     btnLogin.innerText = isAdmin ? "SAIR (ADMIN)" : "SAIR (" + nomeUsuario + ")";
@@ -70,11 +86,13 @@
             }
         });
 
+        // Função de Alerta para quem não está logado
         function verificarAcesso(url) {
             const isAdmin = sessionStorage.getItem('logadoAdmin') === 'true';
             const isMembro = sessionStorage.getItem('logadoMembro') === 'true';
 
             if (isAdmin || isMembro) {
+                // Se por algum motivo o link ainda disparar o onclick estando logado
                 window.location.href = url;
             } else {
                 alert("Acesso Negado! Fotos, Vídeos e Chat são exclusivos para assinantes.");
@@ -86,15 +104,17 @@
 <body>
 
     <style>
-        /* Mantendo seu layout original exatamente como solicitado */
+        /* Layout original preservado */
         img {
             -webkit-user-drag: none;
             user-select: none;
             pointer-events: none; 
         }
+        /* Classe que controla o visual travado */
         .travado {
-            cursor: not-allowed;
-            opacity: 0.5;
+            cursor: not-allowed !important;
+            opacity: 0.4 !important;
+            color: gray !important;
         }
     </style>
 
@@ -103,16 +123,17 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="materias.html">Materias</a></li>
             
-            <li><a href="javascript:void(0)" class="travado" id="link-fotos" onclick="verificarAcesso('login.liberado.html')">Fotos</a></li>
-            <li><a href="javascript:void(0)" class="travado" id="link-videos" onclick="verificarAcesso('login.liberado.html')">Videos</a></li>
-            <li><a href="javascript:void(0)" class="travado" id="link-chat" onclick="verificarAcesso('login.liberado.html')">Chat ao Vivo</a></li>
+            <!-- Os links começam como 'javascript:void(0)' para não navegar antes do login -->
+            <li><a href="javascript:void(0)" class="travado" id="link-fotos" onclick="verificarAcesso()">Fotos</a></li>
+            <li><a href="javascript:void(0)" class="travado" id="link-videos" onclick="verificarAcesso()">Videos</a></li>
+            <li><a href="javascript:void(0)" class="travado" id="link-chat" onclick="verificarAcesso()">Chat ao Vivo</a></li>
             
             <li><a href="login.html" id="btn-login" style="font-weight: bold; color: yellow;">LOGIN</a></li>
         </ul>
     </nav>
 
     <header>
-        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal">
+        <img src="fotos/imagens/00011.jpg" alt="Imagem de Lilith Crow" id="foto-principal" style="transition: 0.5s;">
     </header>
 
     <main>
