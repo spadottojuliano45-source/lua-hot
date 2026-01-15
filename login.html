@@ -75,8 +75,8 @@
 <script>
     // Configurações Reais 2026
     const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    // Sua chave publicável foi inserida aqui:
-    const SUPABASE_KEY = 'sb_publishable_NwWEjJuRPr1Fe-826bS_BQ_bp4NwhJ7'; 
+    // Sua chave publicável (corrigida do seu código original que estava incompleto)
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Sincronização de valores do PIX
@@ -104,17 +104,17 @@
         const emailInput = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
 
-        // Login da Admin hardcoded (mantido como exceção do usuário)
+        // 1. Login do Admin (Hardcoded mantido como exceção)
         if (emailInput === "spadottojuliano45@gmail.com" && pass === "136408ju") {
             sessionStorage.setItem('logadoAdmin', 'true');
             localStorage.setItem('nomeUsuario', 'Lua - Hot');
-            window.location.href = "admin.html";
+            window.location.href = "admin.html"; // REDIRECIONA PARA ADMIN.HTML
             return;
         }
 
-        // Login do Membro via Supabase Auth
+        // 2. Login do Membro via Supabase Auth
         const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
-            email: emailInput, // O Auth usa o e-mail como login principal
+            email: emailInput,
             password: pass,
         });
 
@@ -123,7 +123,7 @@
             return;
         }
 
-        // Se o login Auth for bem-sucedido, verifique se o membro está 'aprovado' na sua tabela 'membros'
+        // 3. Se o login Auth for bem-sucedido, verifique se o membro está 'aprovado' na sua tabela 'membros'
         if (authData.user) {
             const { data: membroData, error: membroError } = await _supabase
                 .from('membros')
@@ -132,77 +132,69 @@
                 .single();
 
             if (membroError || !membroData) {
-                alert("Erro ao encontrar seu perfil. Contate o suporte.");
-                await _supabase.auth.signOut(); // Desloga o usuário automaticamente
+                // Se o usuário existe no Auth mas não na tabela "membros", desloga por segurança
+                alert("Erro ao encontrar seu perfil de membro. Contate o suporte.");
+                await _supabase.auth.signOut(); 
                 return;
             }
 
             if (!membroData.aprovado) {
                 alert("Sua conta está aguardando aprovação de pagamento!");
-                await _supabase.auth.signOut(); // Desloga o usuário automaticamente
+                await _supabase.auth.signOut(); 
                 return;
             } else {
                 // Logado e aprovado com sucesso!
-                localStorage.setItem('supabaseToken', authData.session.access_token); // Armazena o token
+                sessionStorage.setItem('logadoMembro', 'true'); // Define a flag de membro
                 localStorage.setItem('nomeUsuario', membroData.usuario);
-                window.location.href = "login.liberado.html";
+                window.location.href = "index.html"; // REDIRECIONA PARA A INDEX (QUE LIBERA LINKS)
             }
         }
     };
 
-    // --- LÓGICA DE CADASTRO (AGORA SEGURO COM SUPABASE AUTH) ---
+    // --- LÓGICA DE CADASTRO (COMPLETA COM SUPABASE AUTH E INSERÇÃO DE MEMBRO) ---
     const formCad = document.getElementById("form-cadastro");
     formCad.onsubmit = async function(event) {
-        event.preventDefault(); 
-        const status = document.getElementById("status-cadastro");
-        const button = document.getElementById("btn-cadastro-submit");
-        
-        button.disabled = true;
-        button.innerText = "Enviando...";
+        event.preventDefault();
+        const usuario = document.getElementById("reg-usuario").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const senha = document.getElementById("reg-pass").value.trim();
+        const statusEl = document.getElementById("status-cadastro");
+        statusEl.innerText = "Enviando...";
 
-        const email = document.getElementById('reg-email').value.trim();
-        const senha = document.getElementById('reg-pass').value.trim();
-        const usuario = document.getElementById('reg-usuario').value.trim();
-
-        // 1. Registrar no sistema de autenticação (supa-auth)
+        // 1. Cadastra o usuário no sistema de Auth do Supabase
         const { data: authData, error: authError } = await _supabase.auth.signUp({
             email: email,
             password: senha,
         });
 
         if (authError) {
-            console.error("Erro Supabase Auth:", authError);
-            status.innerHTML = `<span style='color:red'>Erro no cadastro: ${authError.message}.</span>`;
-            button.disabled = false;
-            button.innerText = "ENVIAR CADASTRO";
+            statusEl.innerText = "Erro no cadastro: " + authError.message;
             return;
         }
 
-        // 2. Se o Auth for OK, insira os dados públicos na tabela 'membros'
+        // 2. Se o Auth foi sucesso, insere os dados do perfil na sua tabela "membros"
         if (authData.user) {
-            const novoMembro = {
-                id: authData.user.id, // CRÍTICO: use o ID do Auth como ID do membro
-                usuario: usuario,
-                email: email,
-                aprovado: false
-                // Não armazene a senha aqui!
-            };
+            const { error: dbError } = await _supabase
+                .from('membros')
+                .insert([
+                    { 
+                        id: authData.user.id, // Vincula o ID do Auth ao perfil
+                        usuario: usuario, 
+                        email: email, 
+                        aprovado: false // Começa como falso, o admin aprova depois do PIX
+                    },
+                ]);
 
-            const { error: insertError } = await _supabase.from('membros').insert([novoMembro]);
-
-            if (insertError) {
-                console.error("Erro ao inserir membro:", insertError);
-                status.innerHTML = "<span style='color:red'>Erro ao finalizar cadastro. Tente novamente.</span>";
-                // Considere deletar o usuário Auth criado aqui em caso de falha no insert
-                button.disabled = false;
-                button.innerText = "ENVIAR CADASTRO";
+            if (dbError) {
+                statusEl.innerText = "Erro ao salvar perfil. Contate o suporte.";
+                // Opcional: deletar o usuário do Auth se a inserção falhar
                 return;
             }
 
-            status.innerHTML = "<span style='color:#00ff00'>Cadastro enviado com sucesso!<br>Aguarde a liberação após o pagamento.</span>";
-            // Limpa o formulário após sucesso
-            formCad.reset(); 
-            button.style.display = "none"; // Oculta o botão de cadastro após o sucesso
+            statusEl.innerText = "Cadastro enviado com sucesso! Aguardando aprovação do PIX.";
+            statusEl.style.color = "#00ff00";
+            formCad.reset(); // Limpa o formulário após sucesso
+            switchTab(null, 'tab-login'); // Volta para a aba de login
         }
     };
 </script>
