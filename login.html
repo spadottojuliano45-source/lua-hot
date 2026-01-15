@@ -58,9 +58,9 @@
 
             <div class="pix-box">
                 <strong style="color: #ff0000;">PAGAMENTO:</strong> Realize o PIX para o CPF:<br>
-                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">307.759.588,59</span><br>
-                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">A combinar</span><br>
-                Mande o print para: <strong>(14) 99869-9358</strong>
+                <span id="txt-chave" style="color:#00ff00; font-size: 15px; font-weight: bold;">[Chave PIX]</span><br>
+                Valor: <span id="txt-valor" style="color:#00ff00; font-weight:bold;">[Valor]</span><br>
+                Mande o print para: <strong>[Número de WhatsApp]</strong>
             </div>
             <br>
             <button id="btn-cadastro-submit" type="submit" class="btn-acao">ENVIAR CADASTRO</button>
@@ -70,16 +70,13 @@
     </div>
 </div>
 
-<!-- Scripts Supabase CORRIGIDOS 2026 -->
+<!-- Scripts Supabase -->
 <script src="cdn.jsdelivr.net"></script>
 <script>
-    // Configurações Reais 2026
-    const SUPABASE_URL = 'https://lcdwunihbqeozqypsyko.supabase.co';
-    // Sua chave publicável (corrigida do seu código original que estava incompleto)
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZHd1bmloYnFlb3pxeXBzeWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODI3NjgzNywiZXhwIjoyMDgzODUyODM3fQ.XukvV_Pqe6YbJP7FWi4R_O2MTLhw6sV-w2AnQ-nTWsk'; 
+    const SUPABASE_URL = '[SUA_URL_SUPABASE]';
+    const SUPABASE_KEY = '[SUA_CHAVE_SUPABASE]';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Sincronização de valores do PIX
     function atualizarValoresDinamicos() {
         const valorSalvo = localStorage.getItem('valorPixAtivo');
         const chaveSalva = localStorage.getItem('chavePixAtiva');
@@ -94,25 +91,27 @@
     function switchTab(event, tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
+        else document.querySelector(`[onclick*="${tabId}"]`).classList.add('active');
         document.getElementById(tabId).classList.add('active');
     }
 
-    // --- LÓGICA DE LOGIN (AGORA SEGURO COM SUPABASE AUTH) ---
+    // --- LÓGICA DE LOGIN ---
     document.getElementById('form-login').onsubmit = async function(e) {
         e.preventDefault();
         const emailInput = document.getElementById('login-email').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
 
-        // 1. Login do Admin (Hardcoded mantido como exceção)
-        if (emailInput === "spadottojuliano45@gmail.com" && pass === "136408ju") {
-            sessionStorage.setItem('logadoAdmin', 'true');
-            localStorage.setItem('nomeUsuario', 'Lua - Hot');
-            window.location.href = "admin.html"; // REDIRECIONA PARA ADMIN.HTML
-            return;
-        }
+        // Implemente sua lógica de login aqui, seja via Supabase ou outro método.
+        // Redirecione para index.html em caso de sucesso.
+        // Exemplo básico (NÃO SEGURO para produção):
+        /*
+        if (emailInput === "seu_admin_email@example.com" && pass === "sua_senha_admin") {
+             window.location.href = "index.html";
+             return;
+         }
+        */
 
-        // 2. Login do Membro via Supabase Auth
         const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
             email: emailInput,
             password: pass,
@@ -123,35 +122,32 @@
             return;
         }
 
-        // 3. Se o login Auth for bem-sucedido, verifique se o membro está 'aprovado' na sua tabela 'membros'
         if (authData.user) {
             const { data: membroData, error: membroError } = await _supabase
                 .from('membros')
                 .select('*')
-                .eq('id', authData.user.id) // Use o ID seguro do Auth para buscar o perfil
+                .eq('id', authData.user.id)
                 .single();
 
             if (membroError || !membroData) {
-                // Se o usuário existe no Auth mas não na tabela "membros", desloga por segurança
-                alert("Erro ao encontrar seu perfil de membro. Contate o suporte.");
-                await _supabase.auth.signOut(); 
+                alert("Erro ao encontrar perfil. Contate o suporte.");
+                await _supabase.auth.signOut();
                 return;
             }
 
             if (!membroData.aprovado) {
                 alert("Sua conta está aguardando aprovação de pagamento!");
-                await _supabase.auth.signOut(); 
+                await _supabase.auth.signOut();
                 return;
             } else {
-                // Logado e aprovado com sucesso!
-                sessionStorage.setItem('logadoMembro', 'true'); // Define a flag de membro
+                sessionStorage.setItem('logadoMembro', 'true');
                 localStorage.setItem('nomeUsuario', membroData.usuario);
-                window.location.href = "index.html"; // REDIRECIONA PARA A INDEX (QUE LIBERA LINKS)
+                window.location.href = "index.html";
             }
         }
     };
 
-    // --- LÓGICA DE CADASTRO (COMPLETA COM SUPABASE AUTH E INSERÇÃO DE MEMBRO) ---
+    // --- LÓGICA DE CADASTRO ---
     const formCad = document.getElementById("form-cadastro");
     formCad.onsubmit = async function(event) {
         event.preventDefault();
@@ -161,40 +157,31 @@
         const statusEl = document.getElementById("status-cadastro");
         statusEl.innerText = "Enviando...";
 
-        // 1. Cadastra o usuário no sistema de Auth do Supabase
         const { data: authData, error: authError } = await _supabase.auth.signUp({
             email: email,
             password: senha,
         });
 
         if (authError) {
-            statusEl.innerText = "Erro no cadastro: " + authError.message;
+            statusEl.innerText = "Erro: " + authError.message;
             return;
         }
 
-        // 2. Se o Auth foi sucesso, insere os dados do perfil na sua tabela "membros"
         if (authData.user) {
             const { error: dbError } = await _supabase
                 .from('membros')
-                .insert([
-                    { 
-                        id: authData.user.id, // Vincula o ID do Auth ao perfil
-                        usuario: usuario, 
-                        email: email, 
-                        aprovado: false // Começa como falso, o admin aprova depois do PIX
-                    },
-                ]);
+                .insert([{ id: authData.user.id, usuario: usuario, email: email, aprovado: false }]);
 
             if (dbError) {
-                statusEl.innerText = "Erro ao salvar perfil. Contate o suporte.";
-                // Opcional: deletar o usuário do Auth se a inserção falhar
+                statusEl.innerText = "Erro ao salvar perfil.";
                 return;
             }
 
-            statusEl.innerText = "Cadastro enviado com sucesso! Aguardando aprovação do PIX.";
+            statusEl.innerText = "Cadastro enviado! Aguardando aprovação do PIX.";
             statusEl.style.color = "#00ff00";
-            formCad.reset(); // Limpa o formulário após sucesso
-            switchTab(null, 'tab-login'); // Volta para a aba de login
+            formCad.reset();
+            alert("Cadastro realizado! Aguarde a aprovação após o envio do PIX.");
+            switchTab(null, 'tab-login');
         }
     };
 </script>
